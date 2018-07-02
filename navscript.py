@@ -42,33 +42,6 @@ messages = ["What's the {OTHER:COMMON} for this afternoon?",
         "Are there any {OTHER:COMMON} on my {OTHER:COMMON}?",
         "Will it rain tomorrow in {LOCATION:PROPER}?"
         ]
-'''
-Move this strings to profile_messages.txt
-
-messages2 = ["What's the SOMETHING1 for this afternoon?",
-        "What's the SOMETHING1 like on my SOMETHING2?",
-        "Show me a SOMETHING1 on WASHINGTON and WASHINGTON.",
-        "Can you find me a WASHINGTON with WASHINGTON nearby?",
-        "Find a WASHINGTON along WASHINGTON.",
-        "Find the cheapest indoor SOMETHING1 within 500 meters of my SOMETHING2.",
-        "Okay, can you find me a WASHINGTON on my SOMETHING1 that has a WASHINGTON?",
-        "Find SOMETHING1 near WASHINGTON that accepts SOMETHING2 and has a SOMETHING3.",
-
-        "Navigate to WASHINGTON.",
-        "What's my SOMETHING1 to WASHINGTON?",
-        "Show me alternative SOMETHING1.",
-        "Reroute using SOMETHING1.",
-
-        "Drive to WASHINGTON.",
-        "What's my SOMETHING1?",
-        "Can I make tomorrow's 10am {EVENT:COMMON} without recharging?",
-        "What's SOMETHING1 like on the WASHINGTON2?",
-        "Are there any SOMETHING1 on my SOMETHING2?",
-        "Will it rain tomorrow in WASHINGTON?"
-        ]
-with open("profile_messages.txt") as f:
-    messages2 = f.readlines()
-    '''
 
 messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
 print(messages2)
