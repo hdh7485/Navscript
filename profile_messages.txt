@@ -6,12 +6,10 @@ Find a PLACE1 along PLACE2.
 Find the cheapest indoor SOMETHING1 within 500 meters of my SOMETHING2.
 Okay, can you find me a PLACE1 on my SOMETHING1 that has a PLACE2?
 Find SOMETHING1 near PLACE1 that accepts SOMETHING2 and has a SOMETHING3.
-
 Navigate to PLACE1.
 What's my SOMETHING1 to PLACE1?
 Show me alternative SOMETHING1.
 Reroute using SOMETHING1.
-
 Drive to PLACE1.
 What's my SOMETHING1?
 Can I make tomorrow's 10am {EVENT:COMMON} without recharging?

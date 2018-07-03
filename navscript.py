@@ -84,6 +84,8 @@ for test_enum, x_text in enumerate(lines):
     #entity_type ={0:'X', 1:'DAVID', 2:'WASHINTON', 3:'SCHOOL', 4:'MEETTING', 5:'MONALISA', 6:'NOTEBOOK', 7:'SOMETHING'}
     i_entity_type ={'X':0, 'DAVID':1, 'WASHINTON':2, 'SCHOOL':3, 'MEETTING':4, 'MONALISA':5, 'NOTEBOOK':6, 'SOMETHING':7}
 
+    setting_time = time.time()
+
     client = language.LanguageServiceClient()
     document = types.Document(
             content=x_text,
@@ -91,14 +93,14 @@ for test_enum, x_text in enumerate(lines):
             type=enums.Document.Type.PLAIN_TEXT)
 
     entities = client.analyze_entities(document).entities
-    print('Entities: {}'.format(entities))
+    #print('Entities: {}'.format(entities))
 
     result = x_text 
 
     for entity in entities:
         result = result.replace(entity.name, next(entity_type[entity.type]))
 
-    print("Replace nouns: {}".format(result))
+    #print("Replace nouns: {}".format(result))
 
     module_url = "https://tfhub.dev/google/universal-sentence-encoder/1" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
 
@@ -107,6 +109,8 @@ for test_enum, x_text in enumerate(lines):
 
     # Reduce logging output.
     tf.logging.set_verbosity(tf.logging.ERROR)
+
+    entity_time = time.time()
 
     if not os.path.exists("./profile.bin"):
         print("There is no profile.bin. Making profile.bin")
@@ -121,10 +125,13 @@ for test_enum, x_text in enumerate(lines):
         with open('./profile.bin', 'rb') as f:
             message_embeddings = pickle.load(f)
 
+    make_bin_time = time.time()
 
     with tf.Session() as session:
         session.run([tf.global_variables_initializer(), tf.tables_initializer()])
         test_message_embeddings = session.run(embed([result]))
+
+    embedding_time = time.time()
 
     test_labels = [1]
 
@@ -136,12 +143,10 @@ for test_enum, x_text in enumerate(lines):
             minimum = error
             minimum_index = i
 
-    print("\n")
-    print("Minimum RMSE value: {}".format(minimum))
-    print("Most similar script: {}".format(scripts[minimum_index]))
-    print("Estimation: {}".format(minimum_index))
+    # print("Minimum RMSE value: {}".format(minimum))
+    # print("Estimation: {}".format(minimum_index))
+    # print("Most similar script: {}".format(scripts[minimum_index]))
     #print("Answer: {}\n".format(test_label))
-    print()
     result2 = scripts[minimum_index] #query
 
     Dict_entitis={}
@@ -157,9 +162,9 @@ for test_enum, x_text in enumerate(lines):
 
 
     # print("Dict_entitis : ", Dict_entitis)
-    print("Entities : ", google)
-    print("Keys : ", K)
-    print("Values : ", V)
+    # print("Entities : ", google)
+    # print("Keys : ", K)
+    # print("Values : ", V)
 
     # for key, value in Dict_entitis.items():
     #     result2 = result2.replace(value, key)
@@ -168,13 +173,20 @@ for test_enum, x_text in enumerate(lines):
     for i in range(0, number):
         result2 = result2.replace(K[i], V[i],1)
 
+    end_time = time.time()
+
     print("input: {}".format(x_text))
     print("Query: {}".format(result2))
-    print("execution_time={}".format(time.time()-start_time))
-
+    print("setting_time={}".format(setting_time-start_time))
+    print("entity_time={}".format(entity_time-setting_time))
+    print("make_bin_time={}".format(make_bin_time-entity_time))
+    print("embedding_time={}".format(embedding_time-make_bin_time))
+    print("rmse_time={}".format(end_time-embedding_time))
+    
     if len(lines) > 1:
-        if y[test_enum] == minimum_index:
-            answer_correct += 1
+        if int(y[test_enum]) == int(minimum_index):
+            answer_correct = answer_correct + 1
+            print('answer_correct')
         print("y_estimate:{}, y:{}".format(minimum_index, y[test_enum]))
     print("////////////////////////")
 
