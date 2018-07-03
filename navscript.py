@@ -17,7 +17,7 @@ def rmse(predictions, targets):
 start_time = time.time()
 
 if len(sys.argv) > 1:
-    lines = sys.argv[1]
+    lines = [sys.argv[1]]
 else:
     loaded_data = data_loader.load_data('./dataset/test.txt')
     lines = loaded_data[0]
