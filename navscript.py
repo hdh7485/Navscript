@@ -172,11 +172,11 @@ for test_enum, x_text in enumerate(lines):
     print("Query: {}".format(result2))
     print("execution_time={}".format(time.time()-start_time))
 
-    if len(y) > 1:
+    if len(lines) > 1:
         if y[test_enum] == minimum_index:
             answer_correct += 1
         print("y_estimate:{}, y:{}".format(minimum_index, y[test_enum]))
     print("////////////////////////")
 
-if len(y) > 1:
+if len(lines) > 1:
     print("Result: {}/{}".format(answer_correct, len(lines)))
