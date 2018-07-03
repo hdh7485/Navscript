@@ -76,10 +76,11 @@ for test_enum, x_text in enumerate(lines):
     location_pool = ['PLACE1', 'PLACE2', 'PLACE3', 'PLACE4', 'PLACE5']
     #location_pool = ['WASHINGTON', 'SEOUL', 'MADRID', 'LONDON', 'BEIJING']
     other_pool = ['SOMETHING1', 'SOMETHING2', 'SOMETHING3', 'SOMETHING4', 'SOMETHING5']
+    event_pool = ['MEETING1', 'SMEETING2', 'SMEETING3', 'SMEETING4', 'SMEETING5']
 
     google_entity_type ={0:'UNKNOWN', 1:'PERSON', 2:'LOCATION', 3:'ORGANIZATION', 4:'EVENT', 5:'WORK_OF_ART', 6:'CONSUMER_GOOD', 7:'OTHER'}
-    entity_type ={0:'X', 1:'DAVID', 2:iter(location_pool), 3:'SCHOOL', 4:'MEETTING', 5:'MONALISA', 6:'NOTEBOOK', 7:iter(other_pool)}
-    entity_type2 ={0:'X', 1:'DAVID', 2:iter(location_pool), 3:'SCHOOL', 4:'MEETTING', 5:'MONALISA', 6:'NOTEBOOK', 7:iter(other_pool)}
+    entity_type ={0:'X', 1:'DAVID', 2:iter(location_pool), 3:'SCHOOL', 4:iter(event_pool), 5:'MONALISA', 6:'NOTEBOOK', 7:iter(other_pool)}
+    entity_type2 ={0:'X', 1:'DAVID', 2:iter(location_pool), 3:'SCHOOL', 4:iter(event_pool), 5:'MONALISA', 6:'NOTEBOOK', 7:iter(other_pool)}
     #entity_type ={0:'X', 1:'DAVID', 2:'WASHINTON', 3:'SCHOOL', 4:'MEETTING', 5:'MONALISA', 6:'NOTEBOOK', 7:'SOMETHING'}
     i_entity_type ={'X':0, 'DAVID':1, 'WASHINTON':2, 'SCHOOL':3, 'MEETTING':4, 'MONALISA':5, 'NOTEBOOK':6, 'SOMETHING':7}
 
