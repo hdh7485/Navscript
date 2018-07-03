@@ -18,6 +18,7 @@ start_time = time.time()
 
 if len(sys.argv) > 1:
     lines = [sys.argv[1]]
+    print(lines)
 else:
     loaded_data = data_loader.load_data('./dataset/test.txt')
     lines = loaded_data[0]
@@ -138,8 +139,8 @@ for test_enum, x_text in enumerate(lines):
 
     print("\n")
     print("Minimum RMSE value: {}".format(minimum))
-    print("Most similar script: {}".format(scripts[minimum_index]))
     print("Estimation: {}".format(minimum_index))
+    print("Most similar script: {}".format(scripts[minimum_index]))
     #print("Answer: {}\n".format(test_label))
     print()
     result2 = scripts[minimum_index] #query
