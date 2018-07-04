@@ -1,36 +1,36 @@
 What's the weather forecast for this afternoon?
-0
-What's the traffic like on my route?
 1
-Show me a Traffic Camera on US-101 and Bayshore Blvd.
+What's the traffic like on my route?
 2
-Can you find me a gas station with restroom facilities nearby?
+Show me a Traffic Camera on US-101 and Bayshore Blvd.
 3
-Find a coffee shop along route.
+Can you find me a gas station with restroom facilities nearby?
 4
-Find the cheapest indoor parking within 500 meters of my destination.
+Find a coffee shop along route.
 5
-Okay, can you find me a supermarket on my route that has a charging station?
+Find the cheapest indoor parking within 500 meters of my destination.
 6
-Find parking near destination that accepts credit cards and has a valet service.
+Okay, can you find me a supermarket on my route that has a charging station?
 7
-Navigate to San Francisco Museum of Modern Art.
+Find parking near destination that accepts credit cards and has a valet service.
 8
-What's my ETA to destination? 
+Navigate to San Francisco Museum of Modern Art.
 9
-Show me alternative routes.
+What's my ETA to destination? 
 10
-Reroute using I-580 East.
+Show me alternative routes.
 11
-Drive to Downtown Berkeley.
+Reroute using I-580 East.
 12
-What's my drive range?
+Drive to Downtown Berkeley.
 13
-Can I make tomorrow's 10am meeting without recharging? 
+What's my drive range?
 14
-What's traffic like on the Bay Bridge?
+Can I make tomorrow's 10am meeting without recharging? 
 15
-Are there any speed cameras on my route?
+What's traffic like on the Bay Bridge?
 16
-Will it rain tomorrow in Oakland?
+Are there any speed cameras on my route?
 17
+Will it rain tomorrow in Oakland?
+18
