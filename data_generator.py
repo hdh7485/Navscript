@@ -1,3 +1,5 @@
+import copy
+
 def make_data():
     place = ['burger king', 'burgerking', 'restroom', 'restroom facility',  'super market', 'supermarket', 'school', 'starbucks', 'coffee shop', 'cafe', 'college', 'gas station', 'park', 'department store', 'restaurent', 'indoor parking', 'outdoor parking', 'my destination']
     other = ['route', 'traffic camera', 'traffic', 'speed camera']
@@ -55,9 +57,15 @@ def make_data():
             "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:[place]] WHEN:[time]]"
             ]
 
+    result = []
     for sentence in sentences:
-
+        for p in place:
+            result.append(sentence.replace("[place]", p))
+    print(result)
+    with open('generate_test.txt', 'w') as f:
+        for i in result:
+            f.write("{}\n".format(i))
     return
 
 if __name__ == "__main__":
-
+    make_data()
