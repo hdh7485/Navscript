@@ -1,5 +1,3 @@
-import copy
-
 def make_data():
     place = ['burger king', 'burgerking', 'restroom', 'restroom facility',  'super market', 'supermarket', 'school', 'starbucks', 'coffee shop', 'cafe', 'college', 'gas station', 'park', 'department store', 'restaurent', 'indoor parking', 'outdoor parking', 'my destination']
     other = ['route', 'traffic camera', 'traffic', 'speed camera']
@@ -51,9 +49,9 @@ def make_data():
 
             "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:[search_place]]]]",
             "[MODE DRIVERANGE]",
-            "[MODE DRIVERANGE TO:[SEARCH KEYWORD:”10AM MEETING” FROM:SCHEDULE WHEN:[time]] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
-            "[MODE TRAFFIC [SEARCH FROM:TRAFFIC WHERE:[SEARCH KEYWORD:[search_place]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-            "[MODE [other] WHERE:ONROUTE WITH:[VOICERESPONSE TEMPLATE:””*]]",
+            "[MODE DRIVERANGE TO:[SEARCH KEYWORD:[time] [event] FROM:SCHEDULE WHEN:[time]] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
+            "[MODE TRAFFIC [SEARCH FROM:TRAFFIC WHERE:[SEARCH KEYWORD:[search_place]] WITH:[VOICERESPONSE TEMPLATE:""*]",
+            "[MODE [other] WHERE:ONROUTE WITH:[VOICERESPONSE TEMPLATE:""*]]",
             "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:[place]] WHEN:[time]]"
             ]
 
