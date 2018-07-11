@@ -1,1 +1,1 @@
-echo "export TFHUB_CACHE_DIR=\"${HOME}/navscript/modules\"" >> ~/.zshrc
+echo "export TFHUB_CACHE_DIR=\"${HOME}/navscript/modules\"" >> ~/.bashrc
