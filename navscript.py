@@ -102,7 +102,7 @@ for test_enum, x_text in enumerate(lines):
 
     #print("Replace nouns: {}".format(result))
 
-    module_url = "https://tfhub.dev/google/universal-sentence-encoder/1" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
+    module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
 
     # Import the Universal Sentence Encoder's TF Hub module
     embed = hub.Module(module_url)
