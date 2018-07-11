@@ -28,7 +28,10 @@ def process_to_IDs_in_sparse_format(sp, sentences):
     return (values, indices, dense_shape)
 
 
+tf.logging.set_verbosity(tf.logging.ERROR)
 start_time = time.time()
+light_module = False
+#light_module = True
 
 if len(sys.argv) > 1:
     lines = [sys.argv[1]]
@@ -114,38 +117,37 @@ for test_enum, x_text in enumerate(lines):
     for entity in entities:
         result = result.replace(entity.name, next(entity_type[entity.type]))
 
+    entity_time = time.time()
     #print("Replace nouns: {}".format(result))
 
-    #sentence-encoder/2
-    #module_url = "https://tfhub.dev/google/universal-sentence-encoder/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
-    #module_url = str(Path.home()) + "/navscript/modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
-    #module_url = str(Path.home()) + "./modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
-    #sentence-encoder/1
-    #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
-    #sentence-encoder-light/2
-    module_url =  "https://tfhub.dev/google/universal-sentence-encoder-lite/2"
-    #module_url = "/Users/hdh7485/navscript/modules/539544f0a997d91c327c23285ea00c37588d92cc"
+    if not light_module:
+        #sentence-encoder/2
+        #module_url = "https://tfhub.dev/google/universal-sentence-encoder/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
+        module_url = "./modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
+        #sentence-encoder/1
+        #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
+    else:
+        #sentence-encoder-light/2
+        #module_url =  "https://tfhub.dev/google/universal-sentence-encoder-lite/2"
+        module_url = "./modules/539544f0a997d91c327c23285ea00c37588d92cc"
 
     # Import the Universal Sentence Encoder's TF Hub module
     embed = hub.Module(module_url)
     
-    with tf.Session() as sess:
-      spm_path = sess.run(embed(signature="spm_path"))
-      sp = spm.SentencePieceProcessor()
-      sp.Load(spm_path)
-      print("SentencePiece model loaded at {}.".format(spm_path))
+    if light_module:
+        #with tf.Session() as sess:
+        #    spm_path = sess.run(embed(signature="spm_path"))
+        spm_path = module_url + '/assets/universal_encoder_8k_spm.model'
+        sp = spm.SentencePieceProcessor()
+        sp.Load(spm_path)
+        print("SentencePiece model loaded at {}.".format(spm_path))
 
-    # Reduce logging output.
-    tf.logging.set_verbosity(tf.logging.ERROR)
-
-    entity_time = time.time()
-
-    input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
-    encodings = embed(
-            inputs=dict(
-                values=input_placeholder.values,
-                indices=input_placeholder.indices,
-                dense_shape=input_placeholder.dense_shape))
+        input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
+        encodings = embed(
+                inputs=dict(
+                    values=input_placeholder.values,
+                    indices=input_placeholder.indices,
+                    dense_shape=input_placeholder.dense_shape))
 
     if not os.path.exists("./profile.bin"):
         print("There is no profile.bin. Making profile.bin")
@@ -160,7 +162,6 @@ for test_enum, x_text in enumerate(lines):
         print("There is no profile_lite.bin. Making profile_lite.bin")
         values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, messages2)
         # Reduce logging output.
-        tf.logging.set_verbosity(tf.logging.ERROR)
 
         with tf.Session() as session:
             session.run([tf.global_variables_initializer(), tf.tables_initializer()])
@@ -179,20 +180,20 @@ for test_enum, x_text in enumerate(lines):
             message_embeddings = pickle.load(f)
 
     make_bin_time = time.time()
-    #with tf.Session() as session:
-       # session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-       # test_message_embeddings = session.run(embed([result]))
-    values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, result)
-    # Reduce logging output.
-    tf.logging.set_verbosity(tf.logging.ERROR)
+    if not light_module:
+        with tf.Session() as session:
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            test_message_embeddings = session.run(embed([result]))
 
-    with tf.Session() as session:
-        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        test_message_embeddings = session.run(
-                encodings,
-                feed_dict={input_placeholder.values: values,
-                    input_placeholder.indices: indices,
-                    input_placeholder.dense_shape: dense_shape})
+    else:
+        values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, result)
+        with tf.Session() as session:
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            test_message_embeddings = session.run(
+                    encodings,
+                    feed_dict={input_placeholder.values: values,
+                        input_placeholder.indices: indices,
+                        input_placeholder.dense_shape: dense_shape})
 
     embedding_time = time.time()
 
@@ -245,6 +246,7 @@ for test_enum, x_text in enumerate(lines):
     print("make_bin_time={}".format(make_bin_time-entity_time))
     print("embedding_time={}".format(embedding_time-make_bin_time))
     print("rmse_time={}".format(end_time-embedding_time))
+    print("total_time={}".format(end_time-start_time))
     
     if len(lines) > 1:
         if int(y[test_enum]) == int(minimum_index):
