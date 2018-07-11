@@ -104,10 +104,12 @@ for test_enum, x_text in enumerate(lines):
 
     #sentence-encoder/2
     #module_url = "https://tfhub.dev/google/universal-sentence-encoder/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
-    module_url = "/Users/hdh7485/navscript/modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
+    #module_url = "/Users/hdh7485/navscript/modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
     #sentence-encoder/1
     #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
+    #sentence-encoder-light/2
     #module_url =  "https://tfhub.dev/google/universal-sentence-encoder-lite/2"
+    module_url = "/Users/hdh7485/navscript/modules/539544f0a997d91c327c23285ea00c37588d92cc"
 
     # Import the Universal Sentence Encoder's TF Hub module
     embed = hub.Module(module_url)
