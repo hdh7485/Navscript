@@ -13,6 +13,8 @@ from google.cloud import language
 from google.cloud.language import enums
 from google.cloud.language import types
 
+start_time = time.time()
+
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets)**2).mean())
 
@@ -29,7 +31,6 @@ def process_to_IDs_in_sparse_format(sp, sentences):
 
 
 tf.logging.set_verbosity(tf.logging.ERROR)
-start_time = time.time()
 light_module = False
 #light_module = True
 
@@ -41,53 +42,31 @@ else:
     y = loaded_data[1]
     answer_correct = 0 
 
+scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:AFTERNOON]",
+        "[SEARCH FROM:SOMETHING1 WHERE:SOMETHING2]",
+        "[SEARCH FROM:SOMETHING1 WHERE:[SEARCH GEOCODE WHERE:PLACE1]]",
+        "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:SOMETHING1]",
+        "[SEARCH ONE FROM:PLACE1 WHERE:PLACE2]",
+        "[SEARCH ONE FROM:SOMETHING1 WHERE:SOMETHING2 RANGE:500M WITH:[SORT PRICE ASC]]",
+        "[SEARCH ONE FROM:PLACE1 WHERE:SOMETHING1 WITH:PLACE2]",
+        "[SEARCH ONE FROM:SOMETHING1 WITH:SOMETHING2 WITH:PLACE1]",
+        "[ROUTE TO:[SEARCH KEYWORD:PLACE1]]",
+        "[ROUTE INFO:SOMETHING1]",
+        "[ROUTE ALTROUTE]",
+        "[ROUTE ALTROUTE USE:[SEARCH LINKS:SOMETHING1]]",
+
+        "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:PLACE1]]]",
+        "[MODE SOMETHING1]",
+        "[MODE SOMETHING1 TO:[SEARCH KEYWORD:MEETTING FROM:SCHEDULE WHEN:10AM] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
+        "[MODE SOMETHING1 [SEARCH FROM:TRAFFIC WHERE:[SEARCH KEYWORD:PLACE1]] WITH:[VOICERESPONSE TEMPLATE:""*]",
+        "[MODE SOMETHING1 WHERE:SOMETHING2 WITH:[VOICERESPONSE TEMPLATE:""*]]",
+        "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:PLACE1] WHEN:TOMORROW]"
+        ]
+
+messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
+#print(messages2)
+
 for test_enum, x_text in enumerate(lines):
-    messages = ["What's the {OTHER:COMMON} for this afternoon?",
-            "What's the {OTHER:COMMON} like on my {OTHER:COMMON}?",
-            "Show me a {OTHER:COMMON} on {LOCATION:PROPER} and {LOCATION:PROPER}.",
-            "Can you find me a {LOCATION:COMMON} with {LOCATION:COMMON} nearby?",
-            "Find a {LOCATION:COMMON} along {LOCATION:COMMON}.",
-            "Find the cheapest indoor {OTHER:COMMON} within 500 meters of my {OTHER:COMMON}.",
-            "Okay, can you find me a {LOCATION:COMMON} on my {OTHER:COMMON} that has a {LOCATION:COMMON}?",
-            "Find {OTHER:COMMON} near {LOCATION:COMMON} that accepts {OTHER:COMMON} and has a {OTHER:COMMON}.",
-
-            "Navigate to {LOCATION:PROPER}.",
-            "What's my {OTHER:PROPER} to {LOCATION:COMMON}?",
-            "Show me alternative {OTHER:COMMON}.",
-            "Reroute using {OTHER:PROPER}.",
-
-            "Drive to {LOCATION:PROPER}.",
-            "What's my {OTHER:COMMON}?",
-            "Can I make tomorrow's 10am {EVENT:COMMON} without recharging?",
-            "What's {OTHER:COMMON} like on the {LOCATION:PROPER}?",
-            "Are there any {OTHER:COMMON} on my {OTHER:COMMON}?",
-            "Will it rain tomorrow in {LOCATION:PROPER}?"
-            ]
-
-    messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
-    #print(messages2)
-
-    scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:AFTERNOON]",
-            "[SEARCH FROM:SOMETHING1 WHERE:SOMETHING2]",
-            "[SEARCH FROM:SOMETHING1 WHERE:[SEARCH GEOCODE WHERE:PLACE1]]",
-            "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:SOMETHING1]",
-            "[SEARCH ONE FROM:PLACE1 WHERE:PLACE2]",
-            "[SEARCH ONE FROM:SOMETHING1 WHERE:SOMETHING2 RANGE:500M WITH:[SORT PRICE ASC]]",
-            "[SEARCH ONE FROM:PLACE1 WHERE:SOMETHING1 WITH:PLACE2]",
-            "[SEARCH ONE FROM:SOMETHING1 WITH:SOMETHING2 WITH:PLACE1]",
-            "[ROUTE TO:[SEARCH KEYWORD:PLACE1]]",
-            "[ROUTE INFO:SOMETHING1]",
-            "[ROUTE ALTROUTE]",
-            "[ROUTE ALTROUTE USE:[SEARCH LINKS:SOMETHING1]]",
-
-            "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:PLACE1]]]",
-            "[MODE SOMETHING1]",
-            "[MODE SOMETHING1 TO:[SEARCH KEYWORD:MEETTING FROM:SCHEDULE WHEN:10AM] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
-            "[MODE SOMETHING1 [SEARCH FROM:TRAFFIC WHERE:[SEARCH KEYWORD:PLACE1]] WITH:[VOICERESPONSE TEMPLATE:""*]",
-            "[MODE SOMETHING1 WHERE:SOMETHING2 WITH:[VOICERESPONSE TEMPLATE:""*]]",
-            "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:PLACE1] WHEN:TOMORROW]"
-            ]
-
     print('Input: {}'.format(x_text ))
 
     location_pool = ['PLACE1', 'PLACE2', 'PLACE3', 'PLACE4', 'PLACE5']
