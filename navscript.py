@@ -6,15 +6,33 @@ import os
 import pickle
 import time
 import data_loader
+from pathlib import Path
+import sentencepiece as spm
 
 from google.cloud import language
 from google.cloud.language import enums
 from google.cloud.language import types
 
+start_time = time.time()
+
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets)**2).mean())
 
-start_time = time.time()
+def process_to_IDs_in_sparse_format(sp, sentences):
+    # An utility method that processes sentences with the sentence piece processor
+    # 'sp' and returns the results in tf.SparseTensor-similar format:
+    # (values, indices, dense_shape)
+    ids = [sp.EncodeAsIds(x) for x in sentences]
+    max_len = max(len(x) for x in ids)
+    dense_shape = (len(ids), max_len)
+    values=[item for sublist in ids for item in sublist]
+    indices=[[row,col] for row in range(len(ids)) for col in range(len(ids[row]))]
+    return (values, indices, dense_shape)
+
+
+tf.logging.set_verbosity(tf.logging.ERROR)
+light_module = False
+#light_module = True
 
 if len(sys.argv) > 1:
     lines = [sys.argv[1]]
@@ -24,53 +42,31 @@ else:
     y = loaded_data[1]
     answer_correct = 0 
 
+scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:AFTERNOON]",
+        "[SEARCH FROM:SOMETHING1 WHERE:SOMETHING2]",
+        "[SEARCH FROM:SOMETHING1 WHERE:[SEARCH GEOCODE WHERE:PLACE1]]",
+        "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:SOMETHING1]",
+        "[SEARCH ONE FROM:PLACE1 WHERE:PLACE2]",
+        "[SEARCH ONE FROM:SOMETHING1 WHERE:SOMETHING2 RANGE:500M WITH:[SORT PRICE ASC]]",
+        "[SEARCH ONE FROM:PLACE1 WHERE:SOMETHING1 WITH:PLACE2]",
+        "[SEARCH ONE FROM:SOMETHING1 WITH:SOMETHING2 WITH:PLACE1]",
+        "[ROUTE TO:[SEARCH KEYWORD:PLACE1]]",
+        "[ROUTE INFO:SOMETHING1]",
+        "[ROUTE ALTROUTE]",
+        "[ROUTE ALTROUTE USE:[SEARCH LINKS:SOMETHING1]]",
+
+        "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:PLACE1]]]",
+        "[MODE SOMETHING1]",
+        "[MODE SOMETHING1 TO:[SEARCH KEYWORD:MEETTING FROM:SCHEDULE WHEN:10AM] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
+        "[MODE SOMETHING1 [SEARCH FROM:TRAFFIC WHERE:[SEARCH KEYWORD:PLACE1]] WITH:[VOICERESPONSE TEMPLATE:""*]",
+        "[MODE SOMETHING1 WHERE:SOMETHING2 WITH:[VOICERESPONSE TEMPLATE:""*]]",
+        "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:PLACE1] WHEN:TOMORROW]"
+        ]
+
+messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
+#print(messages2)
+
 for test_enum, x_text in enumerate(lines):
-    messages = ["What's the {OTHER:COMMON} for this afternoon?",
-            "What's the {OTHER:COMMON} like on my {OTHER:COMMON}?",
-            "Show me a {OTHER:COMMON} on {LOCATION:PROPER} and {LOCATION:PROPER}.",
-            "Can you find me a {LOCATION:COMMON} with {LOCATION:COMMON} nearby?",
-            "Find a {LOCATION:COMMON} along {LOCATION:COMMON}.",
-            "Find the cheapest indoor {OTHER:COMMON} within 500 meters of my {OTHER:COMMON}.",
-            "Okay, can you find me a {LOCATION:COMMON} on my {OTHER:COMMON} that has a {LOCATION:COMMON}?",
-            "Find {OTHER:COMMON} near {LOCATION:COMMON} that accepts {OTHER:COMMON} and has a {OTHER:COMMON}.",
-
-            "Navigate to {LOCATION:PROPER}.",
-            "What's my {OTHER:PROPER} to {LOCATION:COMMON}?",
-            "Show me alternative {OTHER:COMMON}.",
-            "Reroute using {OTHER:PROPER}.",
-
-            "Drive to {LOCATION:PROPER}.",
-            "What's my {OTHER:COMMON}?",
-            "Can I make tomorrow's 10am {EVENT:COMMON} without recharging?",
-            "What's {OTHER:COMMON} like on the {LOCATION:PROPER}?",
-            "Are there any {OTHER:COMMON} on my {OTHER:COMMON}?",
-            "Will it rain tomorrow in {LOCATION:PROPER}?"
-            ]
-
-    messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
-    #print(messages2)
-
-    scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:AFTERNOON]",
-            "[SEARCH FROM:SOMETHING1 WHERE:SOMETHING2]",
-            "[SEARCH FROM:SOMETHING1 WHERE:[SEARCH GEOCODE WHERE:PLACE1]]",
-            "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:SOMETHING1]",
-            "[SEARCH ONE FROM:PLACE1 WHERE:PLACE2]",
-            "[SEARCH ONE FROM:SOMETHING1 WHERE:SOMETHING2 RANGE:500M WITH:[SORT PRICE ASC]]",
-            "[SEARCH ONE FROM:PLACE1 WHERE:SOMETHING1 WITH:PLACE2]",
-            "[SEARCH ONE FROM:SOMETHING1 WITH:SOMETHING2 WITH:PLACE1]",
-            "[ROUTE TO:[SEARCH KEYWORD:PLACE1]]",
-            "[ROUTE INFO:SOMETHING1]",
-            "[ROUTE ALTROUTE]",
-            "[ROUTE ALTROUTE USE:[SEARCH LINKS:SOMETHING1]]",
-
-            "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:PLACE1]]]",
-            "[MODE SOMETHING1]",
-            "[MODE SOMETHING1 TO:[SEARCH KEYWORD:MEETTING FROM:SCHEDULE WHEN:10AM] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
-            "[MODE SOMETHING1 [SEARCH FROM:TRAFFIC WHERE:[SEARCH KEYWORD:PLACE1]] WITH:[VOICERESPONSE TEMPLATE:""*]",
-            "[MODE SOMETHING1 WHERE:SOMETHING2 WITH:[VOICERESPONSE TEMPLATE:""*]]",
-            "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:PLACE1] WHEN:TOMORROW]"
-            ]
-
     print('Input: {}'.format(x_text ))
 
     location_pool = ['PLACE1', 'PLACE2', 'PLACE3', 'PLACE4', 'PLACE5']
@@ -100,22 +96,37 @@ for test_enum, x_text in enumerate(lines):
     for entity in entities:
         result = result.replace(entity.name, next(entity_type[entity.type]))
 
+    entity_time = time.time()
     #print("Replace nouns: {}".format(result))
 
-    #sentence-encoder/2
-    #module_url = "https://tfhub.dev/google/universal-sentence-encoder/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
-    module_url = "/Users/hdh7485/navscript/modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
-    #sentence-encoder/1
-    #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
-    #module_url =  "https://tfhub.dev/google/universal-sentence-encoder-lite/2"
+    if not light_module:
+        #sentence-encoder/2
+        #module_url = "https://tfhub.dev/google/universal-sentence-encoder/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
+        module_url = "./modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
+        #sentence-encoder/1
+        #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
+    else:
+        #sentence-encoder-light/2
+        #module_url =  "https://tfhub.dev/google/universal-sentence-encoder-lite/2"
+        module_url = "./modules/539544f0a997d91c327c23285ea00c37588d92cc"
 
     # Import the Universal Sentence Encoder's TF Hub module
     embed = hub.Module(module_url)
+    
+    if light_module:
+        #with tf.Session() as sess:
+        #    spm_path = sess.run(embed(signature="spm_path"))
+        spm_path = module_url + '/assets/universal_encoder_8k_spm.model'
+        sp = spm.SentencePieceProcessor()
+        sp.Load(spm_path)
+        print("SentencePiece model loaded at {}.".format(spm_path))
 
-    # Reduce logging output.
-    tf.logging.set_verbosity(tf.logging.ERROR)
-
-    entity_time = time.time()
+        input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
+        encodings = embed(
+                inputs=dict(
+                    values=input_placeholder.values,
+                    indices=input_placeholder.indices,
+                    dense_shape=input_placeholder.dense_shape))
 
     if not os.path.exists("./profile.bin"):
         print("There is no profile.bin. Making profile.bin")
@@ -125,16 +136,43 @@ for test_enum, x_text in enumerate(lines):
             with open('profile.bin', 'wb') as f:
                 pickle.dump(message_embeddings, f)
         print("Finish make profile!")
+
+    elif not os.path.exists("./profile_lite.bin"):
+        print("There is no profile_lite.bin. Making profile_lite.bin")
+        values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, messages2)
+        # Reduce logging output.
+
+        with tf.Session() as session:
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            message_embeddings = session.run(
+                    encodings,
+                    feed_dict={input_placeholder.values: values,
+                        input_placeholder.indices: indices,
+                        input_placeholder.dense_shape: dense_shape})
+            with open('profile_lite.bin', 'wb') as f:
+                pickle.dump(message_embeddings, f)
+        print("Finish make profile!")
+
     else:
         print("profile.bin exists")
         with open('./profile.bin', 'rb') as f:
             message_embeddings = pickle.load(f)
 
     make_bin_time = time.time()
+    if not light_module:
+        with tf.Session() as session:
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            test_message_embeddings = session.run(embed([result]))
 
-    with tf.Session() as session:
-        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        test_message_embeddings = session.run(embed([result]))
+    else:
+        values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, result)
+        with tf.Session() as session:
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            test_message_embeddings = session.run(
+                    encodings,
+                    feed_dict={input_placeholder.values: values,
+                        input_placeholder.indices: indices,
+                        input_placeholder.dense_shape: dense_shape})
 
     embedding_time = time.time()
 
@@ -187,6 +225,7 @@ for test_enum, x_text in enumerate(lines):
     print("make_bin_time={}".format(make_bin_time-entity_time))
     print("embedding_time={}".format(embedding_time-make_bin_time))
     print("rmse_time={}".format(end_time-embedding_time))
+    print("total_time={}".format(end_time-start_time))
     
     if len(lines) > 1:
         if int(y[test_enum]) == int(minimum_index):
