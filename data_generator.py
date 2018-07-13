@@ -55,11 +55,73 @@ def make_data():
             "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:[place]] WHEN:[time]]"
             ]
 
-    result = []
+    generated_sentences = []
     for sentence in sentences:
-        for p in place:
-            result.append(sentence.replace("[place]", p))
+        if not sentence.find('[place]') == -1:
+            for p in place:
+                generated_sentences.append(sentence.replace("[place]", p))
+        else:
+            generated_sentences.append(sentence)
+
+    generated_sentences2 = []
+    for sentence in generated_sentences:
+        if not sentence.find('[time]') == -1:
+            for p in time:
+                generated_sentences2.append(sentence.replace("[time]", p))
+        else:
+            generated_sentences2.append(sentence)
+
+    generated_sentences3 = []
+    for sentence in generated_sentences2:
+        if not sentence.find('[weather]') == -1:
+            for p in weather:
+                generated_sentences3.append(sentence.replace("[weather]", p))
+        else:
+            generated_sentences3.append(sentence)
+
+    generated_sentences4 = []
+    for sentence in generated_sentences3:
+        if not sentence.find('[other]') == -1:
+            for p in other:
+                generated_sentences4.append(sentence.replace("[other]", p))
+        else:
+            generated_sentences4.append(sentence)
+
+    generated_sentences5 = []
+    for sentence in generated_sentences4:
+        if not sentence.find('[service]') == -1:
+            for p in service:
+                generated_sentences5.append(sentence.replace("[service]", p))
+        else:
+            generated_sentences5.append(sentence)
+
+    generated_sentences6 = []
+    for sentence in generated_sentences5:
+        if not sentence.find('[geocode]') == -1:
+            for p in geocode:
+                generated_sentences5.append(sentence.replace("[geocode]", p))
+        else:
+            generated_sentences6.append(sentence)
+
+    generated_sentences7 = []
+    for sentence in generated_sentences6:
+        if not sentence.find('[search_place]') == -1:
+            for p in search_place:
+                generated_sentences6.append(sentence.replace("[search_place]", p))
+        else:
+            generated_sentences7.append(sentence)
+
+    generated_sentences8 = []
+    for sentence in generated_sentences7:
+        if not sentence.find('[distance]') == -1:
+            for p in distance:
+                generated_sentences7.append(sentence.replace("[distance]", p))
+        else:
+            generated_sentences8.append(sentence)
+
+    result = generated_sentences8
     print(result)
+
     with open('generate_test.txt', 'w') as f:
         for i in result:
             f.write("{}\n".format(i))

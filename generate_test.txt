@@ -1,57 +1,25 @@
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [weather] for this [time]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-What's the [other] like on my [other]?
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
-Show me a [other] on [geocode] and [geocode].
+What's the weather for this tomorrow?
+What's the weather forecast for this tomorrow?
+What's the weather for this the day after tomorrow?
+What's the weather forecast for this the day after tomorrow?
+What's the weather for this next week?
+What's the weather forecast for this next week?
+What's the weather for this afternoon?
+What's the weather forecast for this afternoon?
+What's the weather for this morning?
+What's the weather forecast for this morning?
+What's the weather for this evening?
+What's the weather forecast for this evening?
+What's the weather for this dawn?
+What's the weather forecast for this dawn?
+What's the weather for this midnight?
+What's the weather forecast for this midnight?
+What's the weather for this noon?
+What's the weather forecast for this noon?
+What's the route like on my route?
+What's the traffic camera like on my traffic camera?
+What's the traffic like on my traffic?
+What's the speed camera like on my speed camera?
 Can you find me a burger king with burger king nearby?
 Can you find me a burgerking with burgerking nearby?
 Can you find me a restroom with restroom nearby?
@@ -88,24 +56,6 @@ Find a restaurent along route.
 Find a indoor parking along route.
 Find a outdoor parking along route.
 Find a my destination along route.
-Find the cheapest burger king within [distance] of burger king.
-Find the cheapest burgerking within [distance] of burgerking.
-Find the cheapest restroom within [distance] of restroom.
-Find the cheapest restroom facility within [distance] of restroom facility.
-Find the cheapest super market within [distance] of super market.
-Find the cheapest supermarket within [distance] of supermarket.
-Find the cheapest school within [distance] of school.
-Find the cheapest starbucks within [distance] of starbucks.
-Find the cheapest coffee shop within [distance] of coffee shop.
-Find the cheapest cafe within [distance] of cafe.
-Find the cheapest college within [distance] of college.
-Find the cheapest gas station within [distance] of gas station.
-Find the cheapest park within [distance] of park.
-Find the cheapest department store within [distance] of department store.
-Find the cheapest restaurent within [distance] of restaurent.
-Find the cheapest indoor parking within [distance] of indoor parking.
-Find the cheapest outdoor parking within [distance] of outdoor parking.
-Find the cheapest my destination within [distance] of my destination.
 Okay, can you find me a burger king on my route that has a burger king?
 Okay, can you find me a burgerking on my route that has a burgerking?
 Okay, can you find me a restroom on my route that has a restroom?
@@ -124,201 +74,256 @@ Okay, can you find me a restaurent on my route that has a restaurent?
 Okay, can you find me a indoor parking on my route that has a indoor parking?
 Okay, can you find me a outdoor parking on my route that has a outdoor parking?
 Okay, can you find me a my destination on my route that has a my destination?
-Find burger king near destination that accepts [service] and has a [service].
-Find burgerking near destination that accepts [service] and has a [service].
-Find restroom near destination that accepts [service] and has a [service].
-Find restroom facility near destination that accepts [service] and has a [service].
-Find super market near destination that accepts [service] and has a [service].
-Find supermarket near destination that accepts [service] and has a [service].
-Find school near destination that accepts [service] and has a [service].
-Find starbucks near destination that accepts [service] and has a [service].
-Find coffee shop near destination that accepts [service] and has a [service].
-Find cafe near destination that accepts [service] and has a [service].
-Find college near destination that accepts [service] and has a [service].
-Find gas station near destination that accepts [service] and has a [service].
-Find park near destination that accepts [service] and has a [service].
-Find department store near destination that accepts [service] and has a [service].
-Find restaurent near destination that accepts [service] and has a [service].
-Find indoor parking near destination that accepts [service] and has a [service].
-Find outdoor parking near destination that accepts [service] and has a [service].
-Find my destination near destination that accepts [service] and has a [service].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-Navigate to [search_place].
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
-What's my ETA to destination? 
+Find burger king near destination that accepts valet service and has a valet service.
+Find burger king near destination that accepts credit card and has a credit card.
+Find burgerking near destination that accepts valet service and has a valet service.
+Find burgerking near destination that accepts credit card and has a credit card.
+Find restroom near destination that accepts valet service and has a valet service.
+Find restroom near destination that accepts credit card and has a credit card.
+Find restroom facility near destination that accepts valet service and has a valet service.
+Find restroom facility near destination that accepts credit card and has a credit card.
+Find super market near destination that accepts valet service and has a valet service.
+Find super market near destination that accepts credit card and has a credit card.
+Find supermarket near destination that accepts valet service and has a valet service.
+Find supermarket near destination that accepts credit card and has a credit card.
+Find school near destination that accepts valet service and has a valet service.
+Find school near destination that accepts credit card and has a credit card.
+Find starbucks near destination that accepts valet service and has a valet service.
+Find starbucks near destination that accepts credit card and has a credit card.
+Find coffee shop near destination that accepts valet service and has a valet service.
+Find coffee shop near destination that accepts credit card and has a credit card.
+Find cafe near destination that accepts valet service and has a valet service.
+Find cafe near destination that accepts credit card and has a credit card.
+Find college near destination that accepts valet service and has a valet service.
+Find college near destination that accepts credit card and has a credit card.
+Find gas station near destination that accepts valet service and has a valet service.
+Find gas station near destination that accepts credit card and has a credit card.
+Find park near destination that accepts valet service and has a valet service.
+Find park near destination that accepts credit card and has a credit card.
+Find department store near destination that accepts valet service and has a valet service.
+Find department store near destination that accepts credit card and has a credit card.
+Find restaurent near destination that accepts valet service and has a valet service.
+Find restaurent near destination that accepts credit card and has a credit card.
+Find indoor parking near destination that accepts valet service and has a valet service.
+Find indoor parking near destination that accepts credit card and has a credit card.
+Find outdoor parking near destination that accepts valet service and has a valet service.
+Find outdoor parking near destination that accepts credit card and has a credit card.
+Find my destination near destination that accepts valet service and has a valet service.
+Find my destination near destination that accepts credit card and has a credit card.
 What's my ETA to destination? 
 Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Show me alternative routes.
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Reroute using [geocode].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
-Drive to [search_place].
 What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-What's my drive range?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-Can I make [time] [event] without recharging?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-What's traffic like on the [search_place]?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Are there any [other] on my route?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
-Will it rain [time] in [search_place]?
+Can I make tomorrow [event] without recharging?
+Can I make the day after tomorrow [event] without recharging?
+Can I make next week [event] without recharging?
+Can I make afternoon [event] without recharging?
+Can I make morning [event] without recharging?
+Can I make evening [event] without recharging?
+Can I make dawn [event] without recharging?
+Can I make midnight [event] without recharging?
+Can I make noon [event] without recharging?
+Are there any route on my route?
+Are there any traffic camera on my route?
+Are there any traffic on my route?
+Are there any speed camera on my route?
+Show me a route on US-101 and US-101.
+Show me a route on Bayshore Blvd and Bayshore Blvd.
+Show me a route on I-580 East and I-580 East.
+Show me a traffic camera on US-101 and US-101.
+Show me a traffic camera on Bayshore Blvd and Bayshore Blvd.
+Show me a traffic camera on I-580 East and I-580 East.
+Show me a traffic on US-101 and US-101.
+Show me a traffic on Bayshore Blvd and Bayshore Blvd.
+Show me a traffic on I-580 East and I-580 East.
+Show me a speed camera on US-101 and US-101.
+Show me a speed camera on Bayshore Blvd and Bayshore Blvd.
+Show me a speed camera on I-580 East and I-580 East.
+Reroute using US-101.
+Reroute using Bayshore Blvd.
+Reroute using I-580 East.
+Navigate to San Francisco Museum of Modern Art.
+Navigate to Downtown Berkeley.
+Navigate to Bay Bridge.
+Navigate to Oakland.
+Navigate to Seoul.
+Navigate to New York.
+Navigate to Wahinton.
+Navigate to Chicago.
+Drive to San Francisco Museum of Modern Art.
+Drive to Downtown Berkeley.
+Drive to Bay Bridge.
+Drive to Oakland.
+Drive to Seoul.
+Drive to New York.
+Drive to Wahinton.
+Drive to Chicago.
+What's traffic like on the San Francisco Museum of Modern Art?
+What's traffic like on the Downtown Berkeley?
+What's traffic like on the Bay Bridge?
+What's traffic like on the Oakland?
+What's traffic like on the Seoul?
+What's traffic like on the New York?
+What's traffic like on the Wahinton?
+What's traffic like on the Chicago?
+Will it rain tomorrow in San Francisco Museum of Modern Art?
+Will it rain tomorrow in Downtown Berkeley?
+Will it rain tomorrow in Bay Bridge?
+Will it rain tomorrow in Oakland?
+Will it rain tomorrow in Seoul?
+Will it rain tomorrow in New York?
+Will it rain tomorrow in Wahinton?
+Will it rain tomorrow in Chicago?
+Will it rain the day after tomorrow in San Francisco Museum of Modern Art?
+Will it rain the day after tomorrow in Downtown Berkeley?
+Will it rain the day after tomorrow in Bay Bridge?
+Will it rain the day after tomorrow in Oakland?
+Will it rain the day after tomorrow in Seoul?
+Will it rain the day after tomorrow in New York?
+Will it rain the day after tomorrow in Wahinton?
+Will it rain the day after tomorrow in Chicago?
+Will it rain next week in San Francisco Museum of Modern Art?
+Will it rain next week in Downtown Berkeley?
+Will it rain next week in Bay Bridge?
+Will it rain next week in Oakland?
+Will it rain next week in Seoul?
+Will it rain next week in New York?
+Will it rain next week in Wahinton?
+Will it rain next week in Chicago?
+Will it rain afternoon in San Francisco Museum of Modern Art?
+Will it rain afternoon in Downtown Berkeley?
+Will it rain afternoon in Bay Bridge?
+Will it rain afternoon in Oakland?
+Will it rain afternoon in Seoul?
+Will it rain afternoon in New York?
+Will it rain afternoon in Wahinton?
+Will it rain afternoon in Chicago?
+Will it rain morning in San Francisco Museum of Modern Art?
+Will it rain morning in Downtown Berkeley?
+Will it rain morning in Bay Bridge?
+Will it rain morning in Oakland?
+Will it rain morning in Seoul?
+Will it rain morning in New York?
+Will it rain morning in Wahinton?
+Will it rain morning in Chicago?
+Will it rain evening in San Francisco Museum of Modern Art?
+Will it rain evening in Downtown Berkeley?
+Will it rain evening in Bay Bridge?
+Will it rain evening in Oakland?
+Will it rain evening in Seoul?
+Will it rain evening in New York?
+Will it rain evening in Wahinton?
+Will it rain evening in Chicago?
+Will it rain dawn in San Francisco Museum of Modern Art?
+Will it rain dawn in Downtown Berkeley?
+Will it rain dawn in Bay Bridge?
+Will it rain dawn in Oakland?
+Will it rain dawn in Seoul?
+Will it rain dawn in New York?
+Will it rain dawn in Wahinton?
+Will it rain dawn in Chicago?
+Will it rain midnight in San Francisco Museum of Modern Art?
+Will it rain midnight in Downtown Berkeley?
+Will it rain midnight in Bay Bridge?
+Will it rain midnight in Oakland?
+Will it rain midnight in Seoul?
+Will it rain midnight in New York?
+Will it rain midnight in Wahinton?
+Will it rain midnight in Chicago?
+Will it rain noon in San Francisco Museum of Modern Art?
+Will it rain noon in Downtown Berkeley?
+Will it rain noon in Bay Bridge?
+Will it rain noon in Oakland?
+Will it rain noon in Seoul?
+Will it rain noon in New York?
+Will it rain noon in Wahinton?
+Will it rain noon in Chicago?
+Find the cheapest burger king within 50 meters of burger king.
+Find the cheapest burger king within 100 meters of burger king.
+Find the cheapest burger king within 500 meters of burger king.
+Find the cheapest burger king within 1000 meters of burger king.
+Find the cheapest burger king within 2000 meters of burger king.
+Find the cheapest burgerking within 50 meters of burgerking.
+Find the cheapest burgerking within 100 meters of burgerking.
+Find the cheapest burgerking within 500 meters of burgerking.
+Find the cheapest burgerking within 1000 meters of burgerking.
+Find the cheapest burgerking within 2000 meters of burgerking.
+Find the cheapest restroom within 50 meters of restroom.
+Find the cheapest restroom within 100 meters of restroom.
+Find the cheapest restroom within 500 meters of restroom.
+Find the cheapest restroom within 1000 meters of restroom.
+Find the cheapest restroom within 2000 meters of restroom.
+Find the cheapest restroom facility within 50 meters of restroom facility.
+Find the cheapest restroom facility within 100 meters of restroom facility.
+Find the cheapest restroom facility within 500 meters of restroom facility.
+Find the cheapest restroom facility within 1000 meters of restroom facility.
+Find the cheapest restroom facility within 2000 meters of restroom facility.
+Find the cheapest super market within 50 meters of super market.
+Find the cheapest super market within 100 meters of super market.
+Find the cheapest super market within 500 meters of super market.
+Find the cheapest super market within 1000 meters of super market.
+Find the cheapest super market within 2000 meters of super market.
+Find the cheapest supermarket within 50 meters of supermarket.
+Find the cheapest supermarket within 100 meters of supermarket.
+Find the cheapest supermarket within 500 meters of supermarket.
+Find the cheapest supermarket within 1000 meters of supermarket.
+Find the cheapest supermarket within 2000 meters of supermarket.
+Find the cheapest school within 50 meters of school.
+Find the cheapest school within 100 meters of school.
+Find the cheapest school within 500 meters of school.
+Find the cheapest school within 1000 meters of school.
+Find the cheapest school within 2000 meters of school.
+Find the cheapest starbucks within 50 meters of starbucks.
+Find the cheapest starbucks within 100 meters of starbucks.
+Find the cheapest starbucks within 500 meters of starbucks.
+Find the cheapest starbucks within 1000 meters of starbucks.
+Find the cheapest starbucks within 2000 meters of starbucks.
+Find the cheapest coffee shop within 50 meters of coffee shop.
+Find the cheapest coffee shop within 100 meters of coffee shop.
+Find the cheapest coffee shop within 500 meters of coffee shop.
+Find the cheapest coffee shop within 1000 meters of coffee shop.
+Find the cheapest coffee shop within 2000 meters of coffee shop.
+Find the cheapest cafe within 50 meters of cafe.
+Find the cheapest cafe within 100 meters of cafe.
+Find the cheapest cafe within 500 meters of cafe.
+Find the cheapest cafe within 1000 meters of cafe.
+Find the cheapest cafe within 2000 meters of cafe.
+Find the cheapest college within 50 meters of college.
+Find the cheapest college within 100 meters of college.
+Find the cheapest college within 500 meters of college.
+Find the cheapest college within 1000 meters of college.
+Find the cheapest college within 2000 meters of college.
+Find the cheapest gas station within 50 meters of gas station.
+Find the cheapest gas station within 100 meters of gas station.
+Find the cheapest gas station within 500 meters of gas station.
+Find the cheapest gas station within 1000 meters of gas station.
+Find the cheapest gas station within 2000 meters of gas station.
+Find the cheapest park within 50 meters of park.
+Find the cheapest park within 100 meters of park.
+Find the cheapest park within 500 meters of park.
+Find the cheapest park within 1000 meters of park.
+Find the cheapest park within 2000 meters of park.
+Find the cheapest department store within 50 meters of department store.
+Find the cheapest department store within 100 meters of department store.
+Find the cheapest department store within 500 meters of department store.
+Find the cheapest department store within 1000 meters of department store.
+Find the cheapest department store within 2000 meters of department store.
+Find the cheapest restaurent within 50 meters of restaurent.
+Find the cheapest restaurent within 100 meters of restaurent.
+Find the cheapest restaurent within 500 meters of restaurent.
+Find the cheapest restaurent within 1000 meters of restaurent.
+Find the cheapest restaurent within 2000 meters of restaurent.
+Find the cheapest indoor parking within 50 meters of indoor parking.
+Find the cheapest indoor parking within 100 meters of indoor parking.
+Find the cheapest indoor parking within 500 meters of indoor parking.
+Find the cheapest indoor parking within 1000 meters of indoor parking.
+Find the cheapest indoor parking within 2000 meters of indoor parking.
+Find the cheapest outdoor parking within 50 meters of outdoor parking.
+Find the cheapest outdoor parking within 100 meters of outdoor parking.
+Find the cheapest outdoor parking within 500 meters of outdoor parking.
+Find the cheapest outdoor parking within 1000 meters of outdoor parking.
+Find the cheapest outdoor parking within 2000 meters of outdoor parking.
+Find the cheapest my destination within 50 meters of my destination.
+Find the cheapest my destination within 100 meters of my destination.
+Find the cheapest my destination within 500 meters of my destination.
+Find the cheapest my destination within 1000 meters of my destination.
+Find the cheapest my destination within 2000 meters of my destination.
