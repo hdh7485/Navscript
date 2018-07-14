@@ -31,8 +31,8 @@ def process_to_IDs_in_sparse_format(sp, sentences):
 
 
 tf.logging.set_verbosity(tf.logging.ERROR)
-light_module = False
-#light_module = True
+#light_module = False
+light_module = True
 
 if len(sys.argv) > 1:
     lines = [sys.argv[1]]
@@ -214,7 +214,7 @@ for test_enum, x_text in enumerate(lines):
 
     number = len(K)
     for i in range(0, number):
-        result2 = result2.replace(K[i], V[i],1)
+        result2 = result2.replace(K[i], V[i], 1)
 
     end_time = time.time()
 
@@ -228,11 +228,19 @@ for test_enum, x_text in enumerate(lines):
     print("total_time={}".format(end_time-start_time))
     
     if len(lines) > 1:
-        if int(y[test_enum]) == int(minimum_index):
+        y[test_enum] = y[test_enum].upper()
+        y[test_enum] = y[test_enum].replace(" ", "")
+        result2 = result2.upper()
+        result2 = result2.replace(" ", "")
+        #if int(y[test_enum]) == int(minimum_index):
+        if y[test_enum] == result2:
             answer_correct = answer_correct + 1
             print('answer_correct')
-        print("y_estimate:{}, y:{}".format(minimum_index, y[test_enum]))
+        #print("y_estimate:{}, y:{}".format(minimum_index, y[test_enum]))
+        print("y_estimate:{}, y:{}".format(result2, y[test_enum]))
+    print("{}/{}".format(answer_correct, test_enum + 1))
     print("////////////////////////")
+    start_time = time.time()
 
 if len(lines) > 1:
     print("Result: {}/{}".format(answer_correct, len(lines)))
