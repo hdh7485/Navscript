@@ -1,4 +1,4 @@
-What's the SOMETHING1 for this afternoon?
+What's the SOMETHING1 for this TIME1?
 What's the SOMETHING1 like on my SOMETHING2?
 Show me a SOMETHING1 on PLACE1 and PLACE2.
 Can you find me a PLACE1 with PLACE2 nearby?
@@ -12,7 +12,7 @@ Show me alternative SOMETHING1.
 Reroute using SOMETHING1.
 Drive to PLACE1.
 What's my SOMETHING1?
-Can I make tomorrow's 10am {EVENT:COMMON} without recharging?
-What's SOMETHING1 like on the PLACE12?
+Can I make tomorrow's TIME1 MEETING1 without recharging?
+What's SOMETHING1 like on the PLACE1?
 Are there any SOMETHING1 on my SOMETHING2?
-Will it rain tomorrow in PLACE1?
+Will it rain TIME1 in PLACE1?

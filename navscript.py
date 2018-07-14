@@ -31,8 +31,8 @@ def process_to_IDs_in_sparse_format(sp, sentences):
 
 
 tf.logging.set_verbosity(tf.logging.ERROR)
-#light_module = False
-light_module = True
+light_module = False
+#light_module = True
 
 if len(sys.argv) > 1:
     lines = [sys.argv[1]]
@@ -42,7 +42,7 @@ else:
     y = loaded_data[1]
     answer_correct = 0 
 
-scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:AFTERNOON]",
+scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:TIME1]",
         "[SEARCH FROM:SOMETHING1 WHERE:SOMETHING2]",
         "[SEARCH FROM:SOMETHING1 WHERE:[SEARCH GEOCODE WHERE:PLACE1]]",
         "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:SOMETHING1]",
@@ -57,10 +57,10 @@ scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:AFTERNOON]",
 
         "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:PLACE1]]]",
         "[MODE SOMETHING1]",
-        "[MODE SOMETHING1 TO:[SEARCH KEYWORD:MEETTING FROM:SCHEDULE WHEN:10AM] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
+        "[MODE SOMETHING1 TO:[SEARCH KEYWORD:MEETTING FROM:SCHEDULE WHEN:TIME1] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
         "[MODE SOMETHING1 [SEARCH FROM:TRAFFIC WHERE:[SEARCH KEYWORD:PLACE1]] WITH:[VOICERESPONSE TEMPLATE:""*]",
         "[MODE SOMETHING1 WHERE:SOMETHING2 WITH:[VOICERESPONSE TEMPLATE:""*]]",
-        "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:PLACE1] WHEN:TOMORROW]"
+        "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:PLACE1] WHEN:TIME1]"
         ]
 
 messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
@@ -69,10 +69,15 @@ messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
 for test_enum, x_text in enumerate(lines):
     print('Input: {}'.format(x_text ))
 
+    unknow_pool = ['SOMETHING1', 'SOMETHING2', 'SOMETHING3', 'SOMETHING4', 'SOMETHING5']
+    person_pool = ['DAVID', 'PACTRICK', 'BOB', 'HARRY', 'ERIC']
     location_pool = ['PLACE1', 'PLACE2', 'PLACE3', 'PLACE4', 'PLACE5']
     #location_pool = ['WASHINGTON', 'SEOUL', 'MADRID', 'LONDON', 'BEIJING']
-    other_pool = ['SOMETHING1', 'SOMETHING2', 'SOMETHING3', 'SOMETHING4', 'SOMETHING5']
+    organization_pool = ['SCHOOL1', 'SCHOOL2', 'SCHOOL3', 'SCHOOL4', 'SCHOOL5']
     event_pool = ['MEETING1', 'MEETING2', 'MEETING3', 'MEETING4', 'MEETING5']
+    work_of_art_pool = ['MONALISA', 'The Pied Piper of Hamelin']
+    consumer_good_pool = ['MEETING1', 'MEETING2', 'MEETING3', 'MEETING4', 'MEETING5']
+    other_pool = ['SOMETHING1', 'SOMETHING2', 'SOMETHING3', 'SOMETHING4', 'SOMETHING5']
 
     google_entity_type ={0:'UNKNOWN', 1:'PERSON', 2:'LOCATION', 3:'ORGANIZATION', 4:'EVENT', 5:'WORK_OF_ART', 6:'CONSUMER_GOOD', 7:'OTHER'}
     entity_type ={0:'X', 1:'DAVID', 2:iter(location_pool), 3:'SCHOOL', 4:iter(event_pool), 5:'MONALISA', 6:'NOTEBOOK', 7:iter(other_pool)}
@@ -81,6 +86,15 @@ for test_enum, x_text in enumerate(lines):
     i_entity_type ={'X':0, 'DAVID':1, 'WASHINTON':2, 'SCHOOL':3, 'MEETTING':4, 'MONALISA':5, 'NOTEBOOK':6, 'SOMETHING':7}
 
     setting_time = time.time()
+
+    Times = ['the day after tomorrow', 'tomorrow', 'next week', 'afternoon', 'morning', 'evening', 'dawn', 'midnight', 'noon']
+    line_time = ''
+    for i in Times:
+        if i in x_text:
+            line_time = i
+            x_text = x_text.replace(i, 'TIME1')
+
+    found_time = time.time()
 
     client = language.LanguageServiceClient()
     document = types.Document(
@@ -128,35 +142,39 @@ for test_enum, x_text in enumerate(lines):
                     indices=input_placeholder.indices,
                     dense_shape=input_placeholder.dense_shape))
 
-    if not os.path.exists("./profile.bin"):
-        print("There is no profile.bin. Making profile.bin")
-        with tf.Session() as session:
-            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-            message_embeddings = session.run(embed(messages2))
-            with open('profile.bin', 'wb') as f:
-                pickle.dump(message_embeddings, f)
-        print("Finish make profile!")
-
-    elif not os.path.exists("./profile_lite.bin"):
-        print("There is no profile_lite.bin. Making profile_lite.bin")
-        values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, messages2)
-        # Reduce logging output.
-
-        with tf.Session() as session:
-            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-            message_embeddings = session.run(
-                    encodings,
-                    feed_dict={input_placeholder.values: values,
-                        input_placeholder.indices: indices,
-                        input_placeholder.dense_shape: dense_shape})
-            with open('profile_lite.bin', 'wb') as f:
-                pickle.dump(message_embeddings, f)
-        print("Finish make profile!")
-
+    if not light_module:
+        if not os.path.exists("./profile.bin"):
+            print("There is no profile.bin. Making profile.bin")
+            with tf.Session() as session:
+                session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+                message_embeddings = session.run(embed(messages2))
+                with open('profile.bin', 'wb') as f:
+                    pickle.dump(message_embeddings, f)
+            print("Finish make profile!")
+        else:
+            print("profile.bin exists")
+            with open('./profile.bin', 'rb') as f:
+                message_embeddings = pickle.load(f)
     else:
-        print("profile.bin exists")
-        with open('./profile.bin', 'rb') as f:
-            message_embeddings = pickle.load(f)
+        if not os.path.exists("./profile_lite.bin"):
+            print("There is no profile_lite.bin. Making profile_lite.bin")
+            values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, messages2)
+            # Reduce logging output.
+
+            with tf.Session() as session:
+                session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+                message_embeddings = session.run(
+                        encodings,
+                        feed_dict={input_placeholder.values: values,
+                            input_placeholder.indices: indices,
+                            input_placeholder.dense_shape: dense_shape})
+                with open('profile_lite.bin', 'wb') as f:
+                    pickle.dump(message_embeddings, f)
+            print("Finish make profile!")
+        else:
+            print("profile_lite.bin exists")
+            with open('./profile_lite.bin', 'rb') as f:
+                message_embeddings = pickle.load(f)
 
     make_bin_time = time.time()
     if not light_module:
@@ -192,6 +210,7 @@ for test_enum, x_text in enumerate(lines):
     #print("Answer: {}\n".format(test_label))
     result2 = scripts[minimum_index] #query
 
+
     Dict_entitis={}
     K=[] #Keys = Type
     V=[] #Values = Names
@@ -206,8 +225,8 @@ for test_enum, x_text in enumerate(lines):
 
     # print("Dict_entitis : ", Dict_entitis)
     # print("Entities : ", google)
-    # print("Keys : ", K)
-    # print("Values : ", V)
+    print("Keys : ", K)
+    print("Values : ", V)
 
     # for key, value in Dict_entitis.items():
     #     result2 = result2.replace(value, key)
@@ -215,6 +234,8 @@ for test_enum, x_text in enumerate(lines):
     number = len(K)
     for i in range(0, number):
         result2 = result2.replace(K[i], V[i], 1)
+    if 'TIME1' in result2:
+        result2 = result2.replace('TIME1', line_time)
 
     end_time = time.time()
 
