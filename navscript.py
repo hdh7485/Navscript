@@ -14,6 +14,9 @@ from google.cloud.language import enums
 from google.cloud.language import types
 
 start_time = time.time()
+result_sheet_file = open('./result_sheet.txt', 'w')
+result_sheet_file.write('enum||input||answer||estimate||correct\n')
+result_sheet_file.close()
 
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets)**2).mean())
@@ -28,7 +31,6 @@ def process_to_IDs_in_sparse_format(sp, sentences):
     values=[item for sublist in ids for item in sublist]
     indices=[[row,col] for row in range(len(ids)) for col in range(len(ids[row]))]
     return (values, indices, dense_shape)
-
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 light_module = False
@@ -66,6 +68,70 @@ scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:TIME1]",
 messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
 #print(messages2)
 
+if light_module:
+    #with tf.Session() as sess:
+    #    spm_path = sess.run(embed(signature="spm_path"))
+    spm_path = module_url + '/assets/universal_encoder_8k_spm.model'
+    sp = spm.SentencePieceProcessor()
+    sp.Load(spm_path)
+    print("SentencePiece model loaded at {}.".format(spm_path))
+
+    input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
+    encodings = embed(
+            inputs=dict(
+                values=input_placeholder.values,
+                indices=input_placeholder.indices,
+                dense_shape=input_placeholder.dense_shape))
+
+if light_module:
+    if not os.path.exists("./profile_lite.bin"):
+        print("There is no profile_lite.bin. Making profile_lite.bin")
+        values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, messages2)
+        # Reduce logging output.
+
+        with tf.Session() as session:
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            message_embeddings = session.run(
+                    encodings,
+                    feed_dict={input_placeholder.values: values,
+                        input_placeholder.indices: indices,
+                        input_placeholder.dense_shape: dense_shape})
+            with open('profile_lite.bin', 'wb') as f:
+                pickle.dump(message_embeddings, f)
+        print("Finish make profile!")
+    else:
+        print("profile_lite.bin exists")
+        with open('./profile_lite.bin', 'rb') as f:
+            message_embeddings = pickle.load(f)
+else:
+    if not os.path.exists("./profile.bin"):
+        print("There is no profile.bin. Making profile.bin")
+        with tf.Session() as session:
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            message_embeddings = session.run(embed(messages2))
+            with open('profile.bin', 'wb') as f:
+                pickle.dump(message_embeddings, f)
+        print("Finish make profile!")
+    else:
+        print("profile.bin exists")
+        with open('./profile.bin', 'rb') as f:
+            message_embeddings = pickle.load(f)
+#make_bin_time = time.time()
+
+if light_module:
+    #sentence-encoder-light/2
+    #module_url =  "https://tfhub.dev/google/universal-sentence-encoder-lite/2"
+    module_url = "./modules/539544f0a997d91c327c23285ea00c37588d92cc"
+else:
+    #sentence-encoder/2
+    #module_url = "https://tfhub.dev/google/universal-sentence-encoder/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
+    module_url = "./modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
+    #sentence-encoder/1
+    #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
+
+# Import the Universal Sentence Encoder's TF Hub module
+embed = hub.Module(module_url)
+
 for test_enum, x_text in enumerate(lines):
     print('Input: {}'.format(x_text ))
 
@@ -80,10 +146,9 @@ for test_enum, x_text in enumerate(lines):
     other_pool = ['SOMETHING1', 'SOMETHING2', 'SOMETHING3', 'SOMETHING4', 'SOMETHING5']
 
     google_entity_type ={0:'UNKNOWN', 1:'PERSON', 2:'LOCATION', 3:'ORGANIZATION', 4:'EVENT', 5:'WORK_OF_ART', 6:'CONSUMER_GOOD', 7:'OTHER'}
-    entity_type ={0:'X', 1:'DAVID', 2:iter(location_pool), 3:'SCHOOL', 4:iter(event_pool), 5:'MONALISA', 6:'NOTEBOOK', 7:iter(other_pool)}
-    entity_type2 ={0:'X', 1:'DAVID', 2:iter(location_pool), 3:'SCHOOL', 4:iter(event_pool), 5:'MONALISA', 6:'NOTEBOOK', 7:iter(other_pool)}
+    entity_type ={0:'X', 1:iter(person_pool), 2:iter(location_pool), 3:iter(organization_pool), 4:iter(event_pool), 5:iter(work_of_art_pool), 6:iter(consumer_good_pool), 7:iter(other_pool)}
+    entity_type2 ={0:'X', 1:iter(person_pool), 2:iter(location_pool), 3:iter(organization_pool), 4:iter(event_pool), 5:iter(work_of_art_pool), 6:iter(consumer_good_pool), 7:iter(other_pool)}
     #entity_type ={0:'X', 1:'DAVID', 2:'WASHINTON', 3:'SCHOOL', 4:'MEETTING', 5:'MONALISA', 6:'NOTEBOOK', 7:'SOMETHING'}
-    i_entity_type ={'X':0, 'DAVID':1, 'WASHINTON':2, 'SCHOOL':3, 'MEETTING':4, 'MONALISA':5, 'NOTEBOOK':6, 'SOMETHING':7}
 
     setting_time = time.time()
 
@@ -113,84 +178,27 @@ for test_enum, x_text in enumerate(lines):
     entity_time = time.time()
     #print("Replace nouns: {}".format(result))
 
-    if not light_module:
-        #sentence-encoder/2
-        #module_url = "https://tfhub.dev/google/universal-sentence-encoder/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
-        module_url = "./modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
-        #sentence-encoder/1
-        #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
-    else:
-        #sentence-encoder-light/2
-        #module_url =  "https://tfhub.dev/google/universal-sentence-encoder-lite/2"
-        module_url = "./modules/539544f0a997d91c327c23285ea00c37588d92cc"
-
-    # Import the Universal Sentence Encoder's TF Hub module
-    embed = hub.Module(module_url)
-    
     if light_module:
-        #with tf.Session() as sess:
-        #    spm_path = sess.run(embed(signature="spm_path"))
-        spm_path = module_url + '/assets/universal_encoder_8k_spm.model'
-        sp = spm.SentencePieceProcessor()
-        sp.Load(spm_path)
-        print("SentencePiece model loaded at {}.".format(spm_path))
-
-        input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
-        encodings = embed(
-                inputs=dict(
-                    values=input_placeholder.values,
-                    indices=input_placeholder.indices,
-                    dense_shape=input_placeholder.dense_shape))
-
-    if not light_module:
-        if not os.path.exists("./profile.bin"):
-            print("There is no profile.bin. Making profile.bin")
-            with tf.Session() as session:
-                session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-                message_embeddings = session.run(embed(messages2))
-                with open('profile.bin', 'wb') as f:
-                    pickle.dump(message_embeddings, f)
-            print("Finish make profile!")
-        else:
-            print("profile.bin exists")
-            with open('./profile.bin', 'rb') as f:
-                message_embeddings = pickle.load(f)
-    else:
-        if not os.path.exists("./profile_lite.bin"):
-            print("There is no profile_lite.bin. Making profile_lite.bin")
-            values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, messages2)
-            # Reduce logging output.
-
-            with tf.Session() as session:
-                session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-                message_embeddings = session.run(
-                        encodings,
-                        feed_dict={input_placeholder.values: values,
-                            input_placeholder.indices: indices,
-                            input_placeholder.dense_shape: dense_shape})
-                with open('profile_lite.bin', 'wb') as f:
-                    pickle.dump(message_embeddings, f)
-            print("Finish make profile!")
-        else:
-            print("profile_lite.bin exists")
-            with open('./profile_lite.bin', 'rb') as f:
-                message_embeddings = pickle.load(f)
-
-    make_bin_time = time.time()
-    if not light_module:
-        with tf.Session() as session:
-            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-            test_message_embeddings = session.run(embed([result]))
-
-    else:
         values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, result)
         with tf.Session() as session:
             session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            embedding_init_time = time.time()
             test_message_embeddings = session.run(
                     encodings,
                     feed_dict={input_placeholder.values: values,
                         input_placeholder.indices: indices,
                         input_placeholder.dense_shape: dense_shape})
+    else:
+        with tf.Session() as session:
+            #session.run(tf.initialize_all_variables())
+            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            embedding_init_time = time.time()
+            #session.run([tf.initialize_all_variables(), tf.tables_initializer()])
+            print('///////hdh start /////////////////')
+            print([result])
+            print(x_text)
+            print('///////hdh end /////////////////')
+            test_message_embeddings = session.run(embed([result]))
 
     embedding_time = time.time()
 
@@ -243,8 +251,9 @@ for test_enum, x_text in enumerate(lines):
     print("Query: {}".format(result2))
     print("setting_time={}".format(setting_time-start_time))
     print("entity_time={}".format(entity_time-setting_time))
-    print("make_bin_time={}".format(make_bin_time-entity_time))
-    print("embedding_time={}".format(embedding_time-make_bin_time))
+    #print("make_bin_time={}".format(make_bin_time-entity_time))
+    print("embedding_init_time={}".format(embedding_init_time-entity_time))
+    print("embedding_time={}".format(embedding_time-embedding_init_time))
     print("rmse_time={}".format(end_time-embedding_time))
     print("total_time={}".format(end_time-start_time))
     
@@ -254,14 +263,24 @@ for test_enum, x_text in enumerate(lines):
         result2 = result2.upper()
         result2 = result2.replace(" ", "")
         #if int(y[test_enum]) == int(minimum_index):
-        if y[test_enum] == result2:
-            answer_correct = answer_correct + 1
-            print('answer_correct')
         #print("y_estimate:{}, y:{}".format(minimum_index, y[test_enum]))
         print("y_estimate:{}, y:{}".format(result2, y[test_enum]))
+        if y[test_enum] == result2:
+            correct = 'O'
+            answer_correct = answer_correct + 1
+            print('answer_correct')
+        else:
+            correct = 'X'
+
     print("{}/{}".format(answer_correct, test_enum + 1))
     print("////////////////////////")
+
+    #('enum, input, answer, estimate, correct')
+    result_sheet_file = open('./result_sheet.txt', 'a')
+    result_sheet_file.write("{}||{}||{}||{}||{}\n".format(test_enum, x_text, y[test_enum], result2, correct))
+    result_sheet_file.close()
     start_time = time.time()
 
 if len(lines) > 1:
     print("Result: {}/{}".format(answer_correct, len(lines)))
+result_sheet_file.close()
