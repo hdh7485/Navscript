@@ -191,13 +191,16 @@ for test_enum, x_text in enumerate(lines):
     else:
         with tf.Session() as session:
             #session.run(tf.initialize_all_variables())
-            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            if test_enum == 0:
+                session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+            else:
+                #session.run(tf.global_variables_initializer())
+                #session.run(tf.initialize_all_variables())
+                session.run(tf.tables_initializer())
             embedding_init_time = time.time()
             #session.run([tf.initialize_all_variables(), tf.tables_initializer()])
-            print('///////hdh start /////////////////')
             print([result])
             print(x_text)
-            print('///////hdh end /////////////////')
             test_message_embeddings = session.run(embed([result]))
 
     embedding_time = time.time()
