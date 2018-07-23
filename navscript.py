@@ -34,6 +34,7 @@ def process_to_IDs_in_sparse_format(sp, sentences):
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 light_module = False
+
 #light_module = True
 
 if len(sys.argv) > 1:
@@ -89,15 +90,14 @@ if light_module:
         values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, messages2)
         # Reduce logging output.
 
-        with tf.Session() as session:
-            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-            message_embeddings = session.run(
-                    encodings,
-                    feed_dict={input_placeholder.values: values,
-                        input_placeholder.indices: indices,
-                        input_placeholder.dense_shape: dense_shape})
-            with open('profile_lite.bin', 'wb') as f:
-                pickle.dump(message_embeddings, f)
+        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+        message_embeddings = session.run(
+                encodings,
+                feed_dict={input_placeholder.values: values,
+                    input_placeholder.indices: indices,
+                    input_placeholder.dense_shape: dense_shape})
+        with open('profile_lite.bin', 'wb') as f:
+            pickle.dump(message_embeddings, f)
         print("Finish make profile!")
     else:
         print("profile_lite.bin exists")
@@ -106,11 +106,10 @@ if light_module:
 else:
     if not os.path.exists("./profile.bin"):
         print("There is no profile.bin. Making profile.bin")
-        with tf.Session() as session:
-            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-            message_embeddings = session.run(embed(messages2))
-            with open('profile.bin', 'wb') as f:
-                pickle.dump(message_embeddings, f)
+        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
+        message_embeddings = session.run(embed(messages2))
+        with open('profile.bin', 'wb') as f:
+            pickle.dump(message_embeddings, f)
         print("Finish make profile!")
     else:
         print("profile.bin exists")
@@ -130,7 +129,13 @@ else:
     #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
 
 # Import the Universal Sentence Encoder's TF Hub module
+
 embed = hub.Module(module_url)
+messages = tf.placeholder(dtype=tf.string, shape=[None])
+embedding = embed(messages)
+
+session = tf.Session()
+session.run([tf.global_variables_initializer(), tf.tables_initializer()])
 
 for test_enum, x_text in enumerate(lines):
     print('Input: {}'.format(x_text ))
@@ -180,28 +185,19 @@ for test_enum, x_text in enumerate(lines):
 
     if light_module:
         values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, result)
-        with tf.Session() as session:
-            session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-            embedding_init_time = time.time()
-            test_message_embeddings = session.run(
-                    encodings,
-                    feed_dict={input_placeholder.values: values,
-                        input_placeholder.indices: indices,
-                        input_placeholder.dense_shape: dense_shape})
+        #embedding_init_time = time.time()
+        test_message_embeddings = session.run(
+                encodings,
+                feed_dict={input_placeholder.values: values,
+                    input_placeholder.indices: indices,
+                    input_placeholder.dense_shape: dense_shape})
     else:
-        with tf.Session() as session:
-            #session.run(tf.initialize_all_variables())
-            if test_enum == 0:
-                session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-            else:
-                #session.run(tf.global_variables_initializer())
-                #session.run(tf.initialize_all_variables())
-                session.run(tf.tables_initializer())
-            embedding_init_time = time.time()
-            #session.run([tf.initialize_all_variables(), tf.tables_initializer()])
-            print([result])
-            print(x_text)
-            test_message_embeddings = session.run(embed([result]))
+        #embedding_init_time = time.time()
+        print("result %s" % result)
+        test_message_embeddings = session.run(embedding, feed_dict={messages: [result]})
+        #test_message_embeddings = session.run(embedding, feed_dict={messages: [result]})
+        #embedding = embed([result])
+        #test_message_embeddings = session.run(embedding)
 
     embedding_time = time.time()
 
@@ -255,8 +251,8 @@ for test_enum, x_text in enumerate(lines):
     print("setting_time={}".format(setting_time-start_time))
     print("entity_time={}".format(entity_time-setting_time))
     #print("make_bin_time={}".format(make_bin_time-entity_time))
-    print("embedding_init_time={}".format(embedding_init_time-entity_time))
-    print("embedding_time={}".format(embedding_time-embedding_init_time))
+    #print("embedding_init_time={}".format(embedding_init_time-entity_time))
+    print("embedding_time={}".format(embedding_time-entity_time))
     print("rmse_time={}".format(end_time-embedding_time))
     print("total_time={}".format(end_time-start_time))
     
