@@ -69,6 +69,7 @@ dependencies:
   - tensorflow-hub=0.1.0=py_0
   - ca-certificates=2018.03.07=0
   - certifi=2018.4.16=py36_0
+  - more-itertools=4.2.0=py36_0
   - openssl=1.0.2o=h20670df_0
   - pip:
     - cachetools==2.1.0
@@ -119,7 +120,7 @@ dependencies:
     - pyasn1-modules==0.2.2
     - requests==2.19.1
     - rsa==3.4.2
-    - sentencepiece==0.1.1
+    - sentencepiece==0.1.2
     - urllib3==1.23
 prefix: /home/dhhan/anaconda3/envs/navscript
 

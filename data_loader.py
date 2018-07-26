@@ -1,14 +1,18 @@
+import pprint
+
 def load_data(file_name):
     data =  [line.rstrip() for line in list(open(file_name, "r").readlines())]
     x_text = []
-    y = []
-    for i, x in enumerate(data):
-        if i % 2 == 0:
-            x_text.append(x)
-        else:
-            y.append(x)
+    y_script = []
+    y_category = []
 
-    return [x_text, y] 
+    for i, sentence in enumerate(data):
+        split_result = sentence.split("||")
+        x_text.append(split_result[1])
+        y_script.append(split_result[2])
+        y_category.append(split_result[3])
+
+    return [x_text, y_script, y_category] 
 
 if __name__ == '__main__':
-    print(load_data('./dataset/test.txt'))
+    pprint.pprint(load_data('./dataset/test.txt'))
