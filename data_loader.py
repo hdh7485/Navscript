@@ -9,8 +9,8 @@ def load_data(file_name):
     for i, sentence in enumerate(data):
         split_result = sentence.split("||")
         x_text.append(split_result[1])
-        y_script.append(split_result[2])
-        y_category.append(split_result[3])
+        y_script.append(split_result[3])
+        y_category.append(split_result[2])
 
     return [x_text, y_script, y_category] 
 

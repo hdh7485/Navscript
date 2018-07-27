@@ -38,11 +38,12 @@ light_module = False
 #light_module = True
 
 if len(sys.argv) > 1:
-    lines = [sys.argv[1]]
+    input_data = [sys.argv[1]]
 else:
     loaded_data = data_loader.load_data('./dataset/test.txt')
-    lines = loaded_data[0]
-    y = loaded_data[1]
+    input_data = loaded_data[0]
+    label_script = loaded_data[1]
+    label_category = loaded_data[2]
     answer_correct = 0 
 
 scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:TIME1]",
@@ -137,7 +138,7 @@ embedding = embed(messages)
 session = tf.Session()
 session.run([tf.global_variables_initializer(), tf.tables_initializer()])
 
-for test_enum, x_text in enumerate(lines):
+for test_enum, x_text in enumerate(input_data):
     print('Input: {}'.format(x_text ))
 
     unknow_pool = ['SOMETHING1', 'SOMETHING2', 'SOMETHING3', 'SOMETHING4', 'SOMETHING5']
@@ -256,15 +257,15 @@ for test_enum, x_text in enumerate(lines):
     print("rmse_time={}".format(end_time-embedding_time))
     print("total_time={}".format(end_time-start_time))
     
-    if len(lines) > 1:
-        y[test_enum] = y[test_enum].upper()
-        y[test_enum] = y[test_enum].replace(" ", "")
+    if len(input_data) > 1:
+        label_script[test_enum] = label_script[test_enum].upper()
+        label_script[test_enum] = label_script[test_enum].replace(" ", "")
         result2 = result2.upper()
         result2 = result2.replace(" ", "")
         #if int(y[test_enum]) == int(minimum_index):
         #print("y_estimate:{}, y:{}".format(minimum_index, y[test_enum]))
-        print("y_estimate:{}, y:{}".format(result2, y[test_enum]))
-        if y[test_enum] == result2:
+        print("y_estimate:{}, label_script:{}".format(result2, label_script[test_enum]))
+        if label_script[test_enum] == result2:
             correct = 'O'
             answer_correct = answer_correct + 1
             print('answer_correct')
@@ -276,10 +277,10 @@ for test_enum, x_text in enumerate(lines):
 
     #('enum, input, answer, estimate, correct')
     result_sheet_file = open('./result_sheet.txt', 'a')
-    result_sheet_file.write("{}||{}||{}||{}||{}\n".format(test_enum, x_text, y[test_enum], result2, correct))
+    result_sheet_file.write("{}||{}||{}||{}||{}\n".format(test_enum, x_text, label_script[test_enum], result2, correct))
     result_sheet_file.close()
     start_time = time.time()
 
-if len(lines) > 1:
-    print("Result: {}/{}".format(answer_correct, len(lines)))
+if len(input_data) > 1:
+    print("Result: {}/{}".format(answer_correct, len(input_data)))
 result_sheet_file.close()
