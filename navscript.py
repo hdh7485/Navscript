@@ -1,25 +1,28 @@
+# -*- coding:utf-8 -*-
 import tensorflow as tf
 import tensorflow_hub as hub
+import matplotlib.pyplot as plt
 import numpy as np
-import sys
 import os
+import psutil
+import argparse
+import sys
 import pickle
 import time
-import data_loader
-from pathlib import Path
-import sentencepiece as spm
-
 from google.cloud import language
 from google.cloud.language import enums
 from google.cloud.language import types
 
-start_time = time.time()
-result_sheet_file = open('./result_sheet.txt', 'w')
-result_sheet_file.write('enum||input||answer||estimate||correct\n')
-result_sheet_file.close()
+Data_path='dataset/test.txt'
 
 def rmse(predictions, targets):
     return np.sqrt(((predictions - targets)**2).mean())
+
+if len(sys.argv) > 1:
+    lines = sys.argv[1]
+else:
+    lines =  "What's the weather forecast for this afternoon?"
+
 
 def process_to_IDs_in_sparse_format(sp, sentences):
     # An utility method that processes sentences with the sentence piece processor
@@ -32,192 +35,696 @@ def process_to_IDs_in_sparse_format(sp, sentences):
     indices=[[row,col] for row in range(len(ids)) for col in range(len(ids[row]))]
     return (values, indices, dense_shape)
 
-tf.logging.set_verbosity(tf.logging.ERROR)
-light_module = False
+def load_data(file_name):
+    data =  [line.rstrip() for line in list(open(file_name, "r").readlines())]
+    x_text = []
+    y_script = []
+    y_category = []
 
-#light_module = True
+    for i, sentence in enumerate(data):
+        split_result = sentence.split("||")
+        x_text.append(split_result[1])
+        y_script.append(split_result[3])
+        y_category.append(split_result[2])
 
-if len(sys.argv) > 1:
-    input_data = [sys.argv[1]]
-else:
-    loaded_data = data_loader.load_data('./dataset/test.txt')
-    input_data = loaded_data[0]
-    label_script = loaded_data[1]
-    label_category = loaded_data[2]
-    answer_correct = 0 
+    return [x_text, y_script, y_category]
 
-scripts = ["[SEARCH FROM:SOMETHING1 WHERE:HERE WHEN:TIME1]",
-        "[SEARCH FROM:SOMETHING1 WHERE:SOMETHING2]",
-        "[SEARCH FROM:SOMETHING1 WHERE:[SEARCH GEOCODE WHERE:PLACE1]]",
-        "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:SOMETHING1]",
-        "[SEARCH ONE FROM:PLACE1 WHERE:PLACE2]",
-        "[SEARCH ONE FROM:SOMETHING1 WHERE:SOMETHING2 RANGE:500M WITH:[SORT PRICE ASC]]",
-        "[SEARCH ONE FROM:PLACE1 WHERE:SOMETHING1 WITH:PLACE2]",
-        "[SEARCH ONE FROM:SOMETHING1 WITH:SOMETHING2 WITH:PLACE1]",
-        "[ROUTE TO:[SEARCH KEYWORD:PLACE1]]",
-        "[ROUTE INFO:SOMETHING1]",
-        "[ROUTE ALTROUTE]",
-        "[ROUTE ALTROUTE USE:[SEARCH LINKS:SOMETHING1]]",
+one =[
+    "What's the WASHINGTON for this Time?",
+    "What's the SCHOOL for this Time?",
+    "What's the MEETING for this Time?",
+    "What's the MONALISA for this Time?",
+    "What's the NOTEBOOK for this Time?",
+    "What's the SOMETHING for this Time?",
 
-        "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:PLACE1]]]",
-        "[MODE SOMETHING1]",
-        "[MODE SOMETHING1 TO:[SEARCH KEYWORD:MEETTING FROM:SCHEDULE WHEN:TIME1] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
-        "[MODE SOMETHING1 [SEARCH FROM:TRAFFIC WHERE:[SEARCH KEYWORD:PLACE1]] WITH:[VOICERESPONSE TEMPLATE:""*]",
-        "[MODE SOMETHING1 WHERE:SOMETHING2 WITH:[VOICERESPONSE TEMPLATE:""*]]",
-        "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:PLACE1] WHEN:TIME1]"
-        ]
+    "Navigate to WASHINGTON.",
+    "Navigate to SOMETHING.",
+    "Navigate to SCHOOL.",
+    "Navigate to MONALISA.",
+    "Navigate to DAVID.",
 
-messages2 = [line.rstrip('\n') for line in open('profile_messages.txt')]
-#print(messages2)
+    "What's my WASHINGTON to destination?",
+    "What's my SOMETHING to destination?",
+    "What's my SCHOOL to destination?",
 
-if light_module:
-    #with tf.Session() as sess:
-    #    spm_path = sess.run(embed(signature="spm_path"))
-    spm_path = module_url + '/assets/universal_encoder_8k_spm.model'
-    sp = spm.SentencePieceProcessor()
-    sp.Load(spm_path)
-    print("SentencePiece model loaded at {}.".format(spm_path))
+    "Show me alternative WASHINGTON.",
+    "Show me alternative SOMETHING.",
+    "Show me alternative SCHOOL.",
+    "Show me alternative MONALISA.",
 
-    input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
-    encodings = embed(
-            inputs=dict(
-                values=input_placeholder.values,
-                indices=input_placeholder.indices,
-                dense_shape=input_placeholder.dense_shape))
+    "Reroute using WASHINGTON.",
+    "Reroute using SOMETHING.",
+    "Reroute using SCHOOL.",
+    "Reroute using MONALISA.",
 
-if light_module:
-    if not os.path.exists("./profile_lite.bin"):
-        print("There is no profile_lite.bin. Making profile_lite.bin")
-        values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, messages2)
-        # Reduce logging output.
+    "Drive to WASHINGTON.",
+    "Drive to SOMETHING.",
+    "Drive to SCHOOL.",
+    "Drive to MONALISA.",
 
-        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        message_embeddings = session.run(
-                encodings,
-                feed_dict={input_placeholder.values: values,
-                    input_placeholder.indices: indices,
-                    input_placeholder.dense_shape: dense_shape})
-        with open('profile_lite.bin', 'wb') as f:
-            pickle.dump(message_embeddings, f)
-        print("Finish make profile!")
-    else:
-        print("profile_lite.bin exists")
-        with open('./profile_lite.bin', 'rb') as f:
-            message_embeddings = pickle.load(f)
-else:
-    if not os.path.exists("./profile.bin"):
-        print("There is no profile.bin. Making profile.bin")
-        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        message_embeddings = session.run(embed(messages2))
-        with open('profile.bin', 'wb') as f:
-            pickle.dump(message_embeddings, f)
-        print("Finish make profile!")
-    else:
-        print("profile.bin exists")
-        with open('./profile.bin', 'rb') as f:
-            message_embeddings = pickle.load(f)
-#make_bin_time = time.time()
+    "What's my WASHINGTON?",
+    "What's my SOMETHING?",
+    "What's my SCHOOL?",
+    "What's my MONALISA?",
 
-if light_module:
-    #sentence-encoder-light/2
-    #module_url =  "https://tfhub.dev/google/universal-sentence-encoder-lite/2"
-    module_url = "./modules/539544f0a997d91c327c23285ea00c37588d92cc"
-else:
-    #sentence-encoder/2
-    #module_url = "https://tfhub.dev/google/universal-sentence-encoder/2" #@param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
-    module_url = "./modules/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
-    #sentence-encoder/1
-    #module_url = "/Users/hdh7485/navscript/modules/c6f5954ffa065cdb2f2e604e740e8838bf21a2d3"
+    "Can I make Time's 10am WASHINGTON without recharging?",
+    "Can I make Time's 10am SOMETHING without recharging?",
+    "Can I make Time's 10am SCHOOL without recharging?",
+    "Can I make Time's 10am MEETING without recharging?",
 
-# Import the Universal Sentence Encoder's TF Hub module
+    "Will it rain Time in WASHINGTON?",
+    "Will it rain Time in SOMETHING?",
+    "Will it rain Time in SCHOOL?",
+    "Will it rain Time in MEETING?",
 
+    "How long can I go?",
+    "How far I can go?",
+    "How much longer can I go?",
+
+    "What's traffic like on the WASHINGTON?",
+    "What's traffic like on the SOMETHING?",
+    "What's traffic like on the SCHOOL?",
+    "What's traffic like on the MONALISA?"
+]
+one_script = [
+    "[SEARCH FROM:WASHINGTON  WHERE:HERE WHEN:Time]",
+    "[SEARCH FROM:SCHOOL  WHERE:HERE WHEN:Time]",
+    "[SEARCH FROM:MEETING  WHERE:HERE WHEN:Time]",
+    "[SEARCH FROM:MONALISA  WHERE:HERE WHEN:Time]",
+    "[SEARCH FROM:NOTEBOOK  WHERE:HERE WHEN:Time]",
+    "[SEARCH FROM:SOMETHING  WHERE:HERE WHEN:Time]",
+
+    "[ROUTE TO:[SEARCH KEYWORD:WASHINGTON]]",
+    "[ROUTE TO:[SEARCH KEYWORD:SOMETHING]]",
+    "[ROUTE TO:[SEARCH KEYWORD:SCHOOL]]",
+    "[ROUTE TO:[SEARCH KEYWORD:MONALISA]]",
+    "[ROUTE TO:[SEARCH KEYWORD:DAVID]]",
+
+    "[ROUTE INFO:WASHINGTON]",
+    "[ROUTE INFO:SOMETHING]",
+    "[ROUTE INFO:SCHOOL]",
+
+    "[ROUTE WASHINGTON]",
+    "[ROUTE SOMETHING]",
+    "[ROUTE SCHOOL]",
+    "[ROUTE MONALISA]",
+
+    "[ROUTE ALTROUTE USE:[SEARCH LINKS:WASHINGTON]]",
+    "[ROUTE ALTROUTE USE:[SEARCH LINKS:SOMETHING]]",
+    "[ROUTE ALTROUTE USE:[SEARCH LINKS:SCHOOL]]",
+    "[ROUTE ALTROUTE USE:[SEARCH LINKS:MONALISA]]",
+
+    "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:WASHINGTON]]]",
+    "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:SOMETHING]]]",
+    "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:SCHOOL]]]",
+    "[MODE GUIDANCE WITH:[ROUTE TO:[SEARCH KEYWORD:MONALISA]]",
+
+    "[MODE WASHINGTON]",
+    "[MODE SOMETHING]",
+    "[MODE SCHOOL]",
+    "[MODE MONALISA]",
+
+    "[MODE DRIVERANGE TO:[SEARCH KEYWORD:WASHINGTON FROM:SCHEDULE WHEN:Time] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
+    "[MODE DRIVERANGE TO:[SEARCH KEYWORD:SOMETHING FROM:SCHEDULE WHEN:Time] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
+    "[MODE DRIVERANGE TO:[SEARCH KEYWORD:SCHOOL FROM:SCHEDULE WHEN:Time] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
+    "[MODE DRIVERANGE TO:[SEARCH KEYWORD:MEETING FROM:SCHEDULE WHEN:Time] WITH:[VOICERESPONSE TEMPLATE:YES/NO*]]",
+
+    "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:WASHINGTON] WHEN:Time]",
+    "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:SOMETHING] WHEN:Time]",
+    "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:SCHOOL] WHEN:Time]",
+    "[MODE WEATHERFORECAST WHERE:[SEARCH KEYWORD:MEETING] WHEN:Time]",
+
+    "[MODE DRIVERANGE]",
+    "[MODE DRIVERANGE]",
+    "[MODE DRIVERANGE]",
+
+    "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+
+
+]
+one_class_id=[
+    0,0,0,0,0,0,
+    8,8,8,8,8,
+    15,15,15,
+    16,16,16,16,
+    9,9,9,9,
+    10,10,10,10,
+    18,18,18,18,
+    11,11,11,11,
+    14,14,14,14,
+    18,18,18,
+    12,12,12,12
+]
+two = [
+    "What's the WASHINGTON like on my WASHINGTON?",
+    "What's the WASHINGTON like on my SOMETHING?",
+    "What's the SOMETHING like on my WASHINGTON?",
+    "What's the SOMETHING like on my SOMETHING?",
+
+    "Can you find me a WASHINGTON with WASHINGTON nearby?",
+    "Can you find me a WASHINGTON with SOMETHING nearby?",
+    "Can you find me a WASHINGTON with SCHOOL nearby?",
+    "Can you find me a SOMETHING with WASHINGTON nearby?",
+    "Can you find me a SOMETHING with SOMETHING nearby?",
+    "Can you find me a SOMETHING with SCHOOL nearby?",
+    "Can you find me a SCHOOL with WASHINGTON nearby?",
+    "Can you find me a SCHOOL with SOMETHING nearby?",
+    "Can you find me a SCHOOL with SCHOOL nearby?",
+
+    "Find a WASHINGTON along WASHINGTON.",
+    "Find a WASHINGTON along SOMETHING.",
+    "Find a WASHINGTON along SCHOOL.",
+    "Find a SOMETHING along WASHINGTON.",
+    "Find a SOMETHING along SOMETHING.",
+    "Find a SOMETHING along SCHOOL.",
+    "Find a SCHOOL along WASHINGTON.",
+    "Find a SCHOOL along SOMETHING.",
+    "Find a SCHOOL along SCHOOL.",
+
+    "Find the cheapest indoor WASHINGTON within 500 meters of my WASHINGTON.",
+    "Find the cheapest indoor WASHINGTON within 500 meters of my SOMETHING.",
+    "Find the cheapest indoor WASHINGTON within 500 meters of my SCHOOL.",
+    "Find the cheapest indoor SOMETHING within 500 meters of my WASHINGTON.",
+    "Find the cheapest indoor SOMETHING within 500 meters of my SOMETHING.",
+    "Find the cheapest indoor SOMETHING within 500 meters of my SCHOOL.",
+    "Find the cheapest indoor SCHOOL within 500 meters of my WASHINGTON.",
+    "Find the cheapest indoor SCHOOL within 500 meters of my SOMETHING.",
+    "Find the cheapest indoor SCHOOL within 500 meters of my SCHOOL.",
+
+    # "What's WASHINGTON like on the WASHINGTON?",
+    # "What's WASHINGTON like on the SOMETHING?",
+    # "What's WASHINGTON like on the SCHOOL?",
+    # "What's WASHINGTON like on the MONALISA?",
+    #
+    # "What's SOMETHING like on the WASHINGTON?",
+    # "What's SOMETHING like on the SOMETHING?",
+    # "What's SOMETHING like on the SCHOOL?",
+    # "What's SOMETHING like on the MONALISA?",
+    #
+    # "What's SCHOOL like on the WASHINGTON?",
+    # "What's SCHOOL like on the SOMETHING?",
+    # "What's SCHOOL like on the SCHOOL?",
+    # "What's SCHOOL like on the MONALISA?",
+    #
+    # "What's MONALISA like on the WASHINGTON?",
+    # "What's MONALISA like on the SOMETHING?",
+    # "What's MONALISA like on the SCHOOL?",
+    # "What's MONALISA like on the MONALISA?",
+
+    "Are there any WASHINGTON on my WASHINGTON?",
+    "Are there any WASHINGTON on my SOMETHING?",
+    "Are there any WASHINGTON on my SCHOOL?",
+    "Are there any WASHINGTON on my MONALISA?",
+    "Are there any WASHINGTON on my NOTEBOOK?",
+
+    "Are there any SOMETHING on my WASHINGTON?",
+    "Are there any SOMETHING on my SOMETHING?",
+    "Are there any SOMETHING on my SCHOOL?",
+    "Are there any SOMETHING on my MONALISA?",
+    "Are there any SOMETHING on my NOTEBOOK?",
+
+    "Are there any SCHOOL on my WASHINGTON?",
+    "Are there any SCHOOL on my SOMETHING?",
+    "Are there any SCHOOL on my SCHOOL?",
+    "Are there any SCHOOL on my MONALISA?",
+    "Are there any SCHOOL on my NOTEBOOK?",
+
+    "Are there any MONALISA on my WASHINGTON?",
+    "Are there any MONALISA on my SOMETHING?",
+    "Are there any MONALISA on my SCHOOL?",
+    "Are there any MONALISA on my MONALISA?",
+    "Are there any MONALISA on my NOTEBOOK?",
+
+    "Are there any NOTEBOOK on my WASHINGTON?",
+    "Are there any NOTEBOOK on my SOMETHING?",
+    "Are there any NOTEBOOK on my SCHOOL?",
+    "Are there any NOTEBOOK on my MONALISA?",
+    "Are there any NOTEBOOK on my NOTEBOOK?"
+
+]
+two_script = [
+    "[SEARCH FROM:WASHINGTON  WHERE:WASHINGTON]",
+    "[SEARCH FROM:WASHINGTON  WHERE:SOMETHING]",
+    "[SEARCH FROM:SOMETHING WHERE:WASHINGTON]",
+    "[SEARCH FROM:SOMETHING WHERE:SOMETHING]",
+
+    "[SEARCH FROM:WASHINGTON WHERE:NEARBY WITH:WASHINGTON]",
+    "[SEARCH FROM:WASHINGTON WHERE:NEARBY WITH:SOMETHING]",
+    "[SEARCH FROM:WASHINGTON WHERE:NEARBY WITH:RESTROOM]",
+    "[SEARCH FROM:SOMETHING WHERE:NEARBY WITH:WASHINGTON]",
+    "[SEARCH FROM:SOMETHING WHERE:NEARBY WITH:SOMETHING]",
+    "[SEARCH FROM:SOMETHING WHERE:NEARBY WITH:SCHOOL]",
+    "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:WASHINGTON]",
+    "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:SOMETHING]",
+    "[SEARCH FROM:SCHOOL WHERE:NEARBY WITH:SCHOOL]",
+
+    "[SEARCH ONE FROM:WASHINGTON WHERE:WASHINGTON]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SOMETHING]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SCHOOL]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:WASHINGTON]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SOMETHING]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SCHOOL]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:WASHINGTON]",
+    "[SEARCH ONE FROM:SCHOOLWHERE:SOMETHING]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SCHOOL]",
+
+    "[SEARCH ONE FROM:WASHINGTON WHERE:WASHINGTON RANGE:500M WITH:[SORT PRICE ASC]]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SOMETHING RANGE:500M WITH:[SORT PRICE ASC]]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SCHOOL RANGE:500M WITH:[SORT PRICE ASC]]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:WASHINGTON RANGE:500M WITH:[SORT PRICE ASC]]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SOMETHING RANGE:500M WITH:[SORT PRICE ASC]]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SCHOOL RANGE:500M WITH:[SORT PRICE ASC]]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:WASHINGTON RANGE:500M WITH:[SORT PRICE ASC]]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SOMETHING RANGE:500M WITH:[SORT PRICE ASC]]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SCHOOL RANGE:500M WITH:[SORT PRICE ASC]]",
+
+    # "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    #
+    # "[MODE TRAFFIC [SEARCH FROM:SOMETHING WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:SOMETHING WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:SOMETHING WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:SOMETHING WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    #
+    # "[MODE TRAFFIC [SEARCH FROM:SCHOOL WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:SCHOOL WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:SCHOOL WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:SCHOOL WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    #
+    # "[MODE TRAFFIC [SEARCH FROM:MONALISA WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:MONALISA WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:MONALISA WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+    # "[MODE TRAFFIC [SEARCH FROM:MONALISA WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
+
+    "[MODE WASHINGTON WHERE:WASHINGTON WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE WASHINGTON WHERE:SOMETHING WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE WASHINGTON WHERE:SCHOOL WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE WASHINGTON WHERE:MONALISA WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE WASHINGTON WHERE:NOTEBOOK WITH:[VOICERESPONSE TEMPLATE:””*]]",
+
+    "[MODE SOMETHING WHERE:WASHINGTON WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE SOMETHING WHERE:SOMETHING WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE SOMETHING WHERE:SCHOOL WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE SOMETHING WHERE:MONALISA WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE SOMETHING WHERE:NOTEBOOK WITH:[VOICERESPONSE TEMPLATE:””*]]",
+
+    "[MODE SCHOOL WHERE:WASHINGTON WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE SCHOOL WHERE:SOMETHING WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE SCHOOL WHERE:SCHOOL WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE SCHOOL WHERE:MONALISA WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE SCHOOL WHERE:NOTEBOOK WITH:[VOICERESPONSE TEMPLATE:””*]]",
+
+    "[MODE MONALISA WHERE:WASHINGTON WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE MONALISA WHERE:SOMETHING WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE MONALISA WHERE:SCHOOL WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE MONALISA WHERE:MONALISA WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE MONALISA WHERE:NOTEBOOK WITH:[VOICERESPONSE TEMPLATE:””*]]",
+
+    "[MODE NOTEBOOK WHERE:WASHINGTON WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE NOTEBOOK WHERE:SOMETHING WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE NOTEBOOK WHERE:SCHOOL WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE NOTEBOOK WHERE:MONALISA WITH:[VOICERESPONSE TEMPLATE:””*]]",
+    "[MODE NOTEBOOK WHERE:NOTEBOOK WITH:[VOICERESPONSE TEMPLATE:””*]]"
+]
+two_class_id=[
+    1, 1, 1, 1,
+    3, 3, 3, 3, 3, 3, 3, 3, 3,
+    4, 4, 4, 4, 4, 4, 4, 4, 4,
+    5, 5, 5, 5, 5, 5, 5, 5, 5,
+    13, 13, 13, 13, 13,
+    13, 13, 13, 13, 13,
+    13, 13, 13, 13, 13,
+    13, 13, 13, 13, 13,
+    13, 13, 13, 13, 13
+
+]
+three = [
+    "Show me a WASHINGTON on WASHINGTON and WASHINGTON.",
+    "Show me a WASHINGTON on WASHINGTON and SOMETHING.",
+    "Show me a WASHINGTON on WASHINGTON and SCHOOL.",
+    "Show me a WASHINGTON on SOMETHING and WASHINGTON.",
+    "Show me a WASHINGTON on SOMETHING and SCHOOL.",
+    "Show me a WASHINGTON on SOMETHING and SOMETHING.",
+    "Show me a WASHINGTON on SCHOOL and WASHINGTON.",
+    "Show me a WASHINGTON on SCHOOL and SOMETHING.",
+    "Show me a WASHINGTON on SCHOOL and SCHOOL.",
+
+    "Show me a SOMETHING on WASHINGTON and WASHINGTON.",
+    "Show me a SOMETHING on WASHINGTON and SOMETHING.",
+    "Show me a SOMETHING on WASHINGTON and SCHOOL.",
+    "Show me a SOMETHING on SOMETHING and WASHINGTON.",
+    "Show me a SOMETHING on SOMETHING and SCHOOL.",
+    "Show me a SOMETHING on SOMETHING and SOMETHING.",
+    "Show me a SOMETHING on SCHOOL and WASHINGTON.",
+    "Show me a SOMETHING on SCHOOL and SOMETHING.",
+    "Show me a SOMETHING on SCHOOL and SCHOOL.",
+
+    "Show me a SCHOOL on WASHINGTON and WASHINGTON.",
+    "Show me a SCHOOL on WASHINGTON and SOMETHING.",
+    "Show me a SCHOOL on WASHINGTON and SCHOOL.",
+    "Show me a SCHOOL on SOMETHING and WASHINGTON.",
+    "Show me a SCHOOL on SOMETHING and SCHOOL.",
+    "Show me a SCHOOL on SOMETHING and SOMETHING.",
+    "Show me a SCHOOL on SCHOOL and WASHINGTON.",
+    "Show me a SCHOOL on SCHOOL and SOMETHING.",
+    "Show me a SCHOOL on SCHOOL and SCHOOL.",
+
+    "Okay, can you find me a WASHINGTON on my WASHINGTON that has a WASHINGTON?",
+    "Okay, can you find me a WASHINGTON on my WASHINGTON that has a SOMETHING?",
+    "Okay, can you find me a WASHINGTON on my WASHINGTON that has a SCHOOL?",
+    "Okay, can you find me a WASHINGTON on my SOMETHING that has a WASHINGTON?",
+    "Okay, can you find me a WASHINGTON on my SOMETHING that has a SOMETHING?",
+    "Okay, can you find me a WASHINGTON on my SOMETHING that has a SCHOOL?",
+    "Okay, can you find me a WASHINGTON on my SCHOOL that has a WASHINGTON?",
+    "Okay, can you find me a WASHINGTON on my SCHOOL that has a SOMETHING?",
+    "Okay, can you find me a WASHINGTON on my SCHOOL that has a SCHOOL?",
+
+    "Okay, can you find me a SOMETHING on my WASHINGTON that has a WASHINGTON?",
+    "Okay, can you find me a SOMETHING on my WASHINGTON that has a SOMETHING?",
+    "Okay, can you find me a SOMETHING on my WASHINGTON that has a SCHOOL?",
+    "Okay, can you find me a SOMETHING on my SOMETHING that has a WASHINGTON?",
+    "Okay, can you find me a SOMETHING on my SOMETHING that has a SOMETHING?",
+    "Okay, can you find me a SOMETHING on my SOMETHING that has a SCHOOL?",
+    "Okay, can you find me a SOMETHING on my SCHOOL that has a WASHINGTON?",
+    "Okay, can you find me a SOMETHING on my SCHOOL that has a SOMETHING?",
+    "Okay, can you find me a SOMETHING on my SCHOOL that has a SCHOOL?",
+
+    "Okay, can you find me a SCHOOL on my WASHINGTON that has a WASHINGTON?",
+    "Okay, can you find me a SCHOOL on my WASHINGTON that has a SOMETHING?",
+    "Okay, can you find me a SCHOOL on my WASHINGTON that has a SCHOOL?",
+    "Okay, can you find me a SCHOOL on my SOMETHING that has a WASHINGTON?",
+    "Okay, can you find me a SCHOOL on my SOMETHING that has a SOMETHING?",
+    "Okay, can you find me a SCHOOL on my SOMETHING that has a SCHOOL?",
+    "Okay, can you find me a SCHOOL on my SCHOOL that has a WASHINGTON?",
+    "Okay, can you find me a SCHOOL on my SCHOOL that has a SOMETHING?",
+    "Okay, can you find me a SCHOOL on my SCHOOL that has a SCHOOL?",
+
+    "Find WASHINGTON near destination that accepts WASHINGTON and has a WASHINGTON.",
+    "Find WASHINGTON near destination that accepts WASHINGTON and has a SOMETHING.",
+    "Find WASHINGTON near destination that accepts WASHINGTON and has a SCHOOL.",
+    "Find WASHINGTON near destination that accepts SOMETHING and has a WASHINGTON.",
+    "Find WASHINGTON near destination that accepts SOMETHING and has a SOMETHING.",
+    "Find WASHINGTON near destination that accepts SOMETHING and has a SCHOOL.",
+    "Find WASHINGTON near destination that accepts SCHOOL and has a WASHINGTON.",
+    "Find WASHINGTON near destination that accepts SCHOOL and has a SOMETHING.",
+    "Find WASHINGTON near destination that accepts SCHOOL and has a SCHOOL.",
+
+    "Find SOMETHING near destination that accepts WASHINGTON and has a WASHINGTON.",
+    "Find SOMETHING near destination that accepts WASHINGTON and has a SOMETHING.",
+    "Find SOMETHING near destination that accepts WASHINGTON and has a SCHOOL.",
+    "Find SOMETHING near destination that accepts SOMETHING and has a WASHINGTON.",
+    "Find SOMETHING near destination that accepts SOMETHING and has a SOMETHING.",
+    "Find SOMETHING near destination that accepts SOMETHING and has a SCHOOL.",
+    "Find SOMETHING near destination that accepts SCHOOL and has a WASHINGTON.",
+    "Find SOMETHING near destination that accepts SCHOOL and has a SOMETHING.",
+    "Find SOMETHING near destination that accepts SCHOOL and has a SCHOOL.",
+
+    "Find SCHOOL near destination that accepts WASHINGTON and has a WASHINGTON.",
+    "Find SCHOOL near destination that accepts WASHINGTON and has a SOMETHING.",
+    "Find SCHOOL near destination that accepts WASHINGTON and has a SCHOOL.",
+    "Find SCHOOL near destination that accepts SOMETHING and has a WASHINGTON.",
+    "Find SCHOOL near destination that accepts SOMETHING and has a SOMETHING.",
+    "Find SCHOOL near destination that accepts SOMETHING and has a SCHOOL.",
+    "Find SCHOOL near destination that accepts SCHOOL and has a WASHINGTON.",
+    "Find SCHOOL near destination that accepts SCHOOL and has a SOMETHING.",
+    "Find SCHOOL near destination that accepts SCHOOL and has a SCHOOL.",
+
+    "Find MONALISA near destination that accepts WASHINGTON and has a WASHINGTON.",
+    "Find MONALISA near destination that accepts WASHINGTON and has a SOMETHING.",
+    "Find MONALISA near destination that accepts WASHINGTON and has a SCHOOL.",
+    "Find MONALISA near destination that accepts SOMETHING and has a WASHINGTON.",
+    "Find MONALISA near destination that accepts SOMETHING and has a SOMETHING.",
+    "Find MONALISA near destination that accepts SOMETHING and has a SCHOOL.",
+    "Find MONALISA near destination that accepts SCHOOL and has a WASHINGTON.",
+    "Find MONALISA near destination that accepts SCHOOL and has a SOMETHING.",
+    "Find MONALISA near destination that accepts SCHOOL and has a SCHOOL.",
+
+    "Find NOTEBOOK near destination that accepts WASHINGTON and has a WASHINGTON.",
+    "Find NOTEBOOK near destination that accepts WASHINGTON and has a SOMETHING.",
+    "Find NOTEBOOK near destination that accepts WASHINGTON and has a SCHOOL.",
+    "Find NOTEBOOK near destination that accepts SOMETHING and has a WASHINGTON.",
+    "Find NOTEBOOK near destination that accepts SOMETHING and has a SOMETHING.",
+    "Find NOTEBOOK near destination that accepts SOMETHING and has a SCHOOL.",
+    "Find NOTEBOOK near destination that accepts SCHOOL and has a WASHINGTON.",
+    "Find NOTEBOOK near destination that accepts SCHOOL and has a SOMETHING.",
+    "Find NOTEBOOK near destination that accepts SCHOOL and has a SCHOOL."
+]
+three_script = [
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and WASHINGTON]]",
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and SOMETHING]]",
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and SCHOOL]]",
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and WASHINGTON]]",
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and SCHOOL]]",
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and SOMETHING]]",
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and WASHINGTON]]",
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and SOMETHING]]",
+    "[SEARCH FROM:WASHINGTON  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and SCHOOL]]",
+
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and WASHINGTON]]",
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and SOMETHING]]",
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and SCHOOL]]",
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and WASHINGTON]]",
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and SCHOOL]]",
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and SOMETHING]]",
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and WASHINGTON]]",
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and SOMETHING]]",
+    "[SEARCH FROM:SOMETHING  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and SCHOOL]]",
+
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and WASHINGTON]]",
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and SOMETHING]]",
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:WASHINGTON and SCHOOL]]",
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and WASHINGTON]]",
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and SCHOOL]]",
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:SOMETHING and SOMETHING]]",
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and WASHINGTON]]",
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and SOMETHING]]",
+    "[SEARCH FROM:SCHOOL  WHERE:[SEARCH GEOCODE WHERE:SCHOOL and SCHOOL]]",
+
+    "[SEARCH ONE FROM:WASHINGTON WHERE:WASHINGTON WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:WASHINGTON WITH:SOMETHING]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:WASHINGTON WITH:SCHOOL]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SOMETHING WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SOMETHING WITH:SOMETHING]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SOMETHING WITH:SCHOOL]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SCHOOL WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SCHOOL WITH:SOMETHING]",
+    "[SEARCH ONE FROM:WASHINGTON WHERE:SCHOOL WITH:SCHOOL]",
+
+    "[SEARCH ONE FROM:SOMETHING WHERE:WASHINGTON WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:WASHINGTON WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:WASHINGTON WITH:SCHOOL]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SOMETHING WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SOMETHING WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SOMETHING WITH:SCHOOL]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SCHOOL WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SCHOOL WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SOMETHING WHERE:SCHOOL WITH:SCHOOL]",
+
+    "[SEARCH ONE FROM:SCHOOL WHERE:WASHINGTON WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:WASHINGTON WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:WASHINGTON WITH:SCHOOL]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SOMETHING WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SOMETHING WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SOMETHING WITH:SCHOOL]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SCHOOL WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SCHOOL WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SCHOOL WHERE:SCHOOL WITH:SCHOOL]",
+
+    "[SEARCH ONE FROM:WASHINGTON WITH:WASHINGTON WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:WASHINGTON WITH:WASHINGTON WITH:SOMETHING]",
+    "[SEARCH ONE FROM:WASHINGTON WITH:WASHINGTON WITH:SCHOOL]",
+    "[SEARCH ONE FROM:WASHINGTON WITH:SOMETHING WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:WASHINGTON WITH:SOMETHING WITH:SOMETHING]",
+    "[SEARCH ONE FROM:WASHINGTON WITH:SOMETHING WITH:SCHOOL]",
+    "[SEARCH ONE FROM:WASHINGTON WITH:SCHOOL WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:WASHINGTON WITH:SCHOOL WITH:SOMETHING]",
+    "[SEARCH ONE FROM:WASHINGTON WITH:SCHOOL WITH:SCHOOL]",
+
+    "[SEARCH ONE FROM:SOMETHING WITH:WASHINGTON WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SOMETHING WITH:WASHINGTON WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SOMETHING WITH:WASHINGTON WITH:SCHOOL]",
+    "[SEARCH ONE FROM:SOMETHING WITH:SOMETHING WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SOMETHING WITH:SOMETHING WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SOMETHING WITH:SOMETHING WITH:SCHOOL]",
+    "[SEARCH ONE FROM:SOMETHING WITH:SCHOOL WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SOMETHING WITH:SCHOOL WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SOMETHING WITH:SCHOOL WITH:SCHOOL]",
+
+    "[SEARCH ONE FROM:SCHOOL WITH:WASHINGTON WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SCHOOL WITH:WASHINGTON WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SCHOOL WITH:WASHINGTON WITH:SCHOOL]",
+    "[SEARCH ONE FROM:SCHOOL WITH:SOMETHING WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SCHOOL WITH:SOMETHING WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SCHOOL WITH:SOMETHING WITH:SCHOOL]",
+    "[SEARCH ONE FROM:SCHOOL WITH:SCHOOL WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:SCHOOL WITH:SCHOOL WITH:SOMETHING]",
+    "[SEARCH ONE FROM:SCHOOL WITH:SCHOOL WITH:SCHOOL]",
+
+    "[SEARCH ONE FROM:MONALISA WITH:WASHINGTON WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:MONALISA WITH:WASHINGTON WITH:SOMETHING]",
+    "[SEARCH ONE FROM:MONALISA WITH:WASHINGTON WITH:SCHOOL]",
+    "[SEARCH ONE FROM:MONALISA WITH:SOMETHING WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:MONALISA WITH:SOMETHING WITH:SOMETHING]",
+    "[SEARCH ONE FROM:MONALISA WITH:SOMETHING WITH:SCHOOL]",
+    "[SEARCH ONE FROM:MONALISA WITH:SCHOOL WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:MONALISA WITH:SCHOOL WITH:SOMETHING]",
+    "[SEARCH ONE FROM:MONALISA WITH:SCHOOL WITH:SCHOOL]",
+
+    "[SEARCH ONE FROM:NOTEBOOK WITH:WASHINGTON WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:NOTEBOOK WITH:WASHINGTON WITH:SOMETHING]",
+    "[SEARCH ONE FROM:NOTEBOOK WITH:WASHINGTON WITH:SCHOOL]",
+    "[SEARCH ONE FROM:NOTEBOOK WITH:SOMETHING WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:NOTEBOOK WITH:SOMETHING WITH:SOMETHING]",
+    "[SEARCH ONE FROM:NOTEBOOK WITH:SOMETHING WITH:SCHOOL]",
+    "[SEARCH ONE FROM:NOTEBOOK WITH:SCHOOL WITH:WASHINGTON]",
+    "[SEARCH ONE FROM:NOTEBOOK WITH:SCHOOL WITH:SOMETHING]",
+    "[SEARCH ONE FROM:NOTEBOOK WITH:SCHOOL WITH:SCHOOL]"
+]
+three_class_id=[
+    2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2,
+    6, 6, 6, 6, 6, 6, 6, 6, 6,
+    6, 6, 6, 6, 6, 6, 6, 6, 6,
+    6, 6, 6, 6, 6, 6, 6, 6, 6,
+    7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7
+
+]
+
+message_total = [one,two,three]
+message_embeddings_total=[]
+embeded_class_id=[one_class_id,two_class_id,three_class_id]
+
+for i in range(len(message_total)):
+    print(len(message_total[i]))
+    print(len(embeded_class_id[i]))
+    assert len(message_total[i]) !=embeded_class_id[i]
+
+script_total = [one_script, two_script, three_script]
+
+google_entity_type ={0:'UNKNOWN', 1:'PERSON', 2:'LOCATION', 3:'ORGANIZATION', 4:'EVENT', 5:'WORK_OF_ART', 6:'CONSUMER_GOOD', 7:'OTHER'}
+entity_type ={0:'X', 1:'DAVID', 2:'WASHINGTON', 3:'SCHOOL', 4:'MEETTING', 5:'MONALISA', 6:'NOTEBOOK', 7:'SOMETHING'}
+i_entity_type ={'X':0, 'DAVID':1, 'WASHINGTON':2, 'SCHOOL':3, 'MEETTING':4, 'MONALISA':5, 'NOTEBOOK':6, 'SOMETHING':7}
+Times = ['tomorrow', 'the day after tomorrow', 'next week', 'afternoon', 'morning', 'evening', 'dawn', 'midnight', 'noon']
+line_time=''
+
+Correct_sentence=[]
+Correct_script=[]
+Correct_classID=[]
+Correct_answer=[]
+Correct_ID=[]
+Correct_navscript=[]
+Wrong_sentence=[]
+Wrong_script=[]
+Wrong_classID=[]
+Wrong_answer=[]
+Wrong_ID=[]
+Wrong_navscript=[]
+
+module_url = "https://tfhub.dev/google/universal-sentence-encoder/1"  # @param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
 embed = hub.Module(module_url)
 messages = tf.placeholder(dtype=tf.string, shape=[None])
 embedding = embed(messages)
 
 session = tf.Session()
 session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-
-for test_enum, x_text in enumerate(input_data):
-    print('Input: {}'.format(x_text ))
-
-    unknow_pool = ['SOMETHING1', 'SOMETHING2', 'SOMETHING3', 'SOMETHING4', 'SOMETHING5']
-    person_pool = ['DAVID', 'PACTRICK', 'BOB', 'HARRY', 'ERIC']
-    location_pool = ['PLACE1', 'PLACE2', 'PLACE3', 'PLACE4', 'PLACE5']
-    #location_pool = ['WASHINGTON', 'SEOUL', 'MADRID', 'LONDON', 'BEIJING']
-    organization_pool = ['SCHOOL1', 'SCHOOL2', 'SCHOOL3', 'SCHOOL4', 'SCHOOL5']
-    event_pool = ['MEETING1', 'MEETING2', 'MEETING3', 'MEETING4', 'MEETING5']
-    work_of_art_pool = ['MONALISA', 'The Pied Piper of Hamelin']
-    consumer_good_pool = ['MEETING1', 'MEETING2', 'MEETING3', 'MEETING4', 'MEETING5']
-    other_pool = ['SOMETHING1', 'SOMETHING2', 'SOMETHING3', 'SOMETHING4', 'SOMETHING5']
-
-    google_entity_type ={0:'UNKNOWN', 1:'PERSON', 2:'LOCATION', 3:'ORGANIZATION', 4:'EVENT', 5:'WORK_OF_ART', 6:'CONSUMER_GOOD', 7:'OTHER'}
-    entity_type ={0:'X', 1:iter(person_pool), 2:iter(location_pool), 3:iter(organization_pool), 4:iter(event_pool), 5:iter(work_of_art_pool), 6:iter(consumer_good_pool), 7:iter(other_pool)}
-    entity_type2 ={0:'X', 1:iter(person_pool), 2:iter(location_pool), 3:iter(organization_pool), 4:iter(event_pool), 5:iter(work_of_art_pool), 6:iter(consumer_good_pool), 7:iter(other_pool)}
-    #entity_type ={0:'X', 1:'DAVID', 2:'WASHINTON', 3:'SCHOOL', 4:'MEETTING', 5:'MONALISA', 6:'NOTEBOOK', 7:'SOMETHING'}
-
-    setting_time = time.time()
-
-    Times = ['the day after tomorrow', 'tomorrow', 'next week', 'afternoon', 'morning', 'evening', 'dawn', 'midnight', 'noon']
-    line_time = ''
-    for i in Times:
-        if i in x_text:
-            line_time = i
-            x_text = x_text.replace(i, 'TIME1')
-
-    found_time = time.time()
-
+t_sentences, t_scripts, class_ID = load_data(Data_path)
+print("start embed")
+# Import the Universal Sentence Encoder's TF Hub module
+print("end")
+for test_enum, Input_data in enumerate(zip(t_sentences,t_scripts,class_ID)):
+    time0 = time.time()
+    lines=Input_data[0]
+    for i in range(len(Times)):
+        if Times[i] in lines:
+            line_time = Times[i]
+            lines = lines.replace(Times[i], 'Time')
+    light_module = True
     client = language.LanguageServiceClient()
     document = types.Document(
-            content=x_text,
-            language='en',
-            type=enums.Document.Type.PLAIN_TEXT)
-
+        content=lines,
+        language='en',
+        type=enums.Document.Type.PLAIN_TEXT)
+    # document = types.Document(content=lines,language='en',type=enums.Document.Type.PLAIN_TEXT)
     entities = client.analyze_entities(document).entities
-    #print('Entities: {}'.format(entities))
 
-    result = x_text 
+    result = Input_data[0]
 
     for entity in entities:
-        result = result.replace(entity.name, next(entity_type[entity.type]))
+        result = result.replace(entity.name, entity_type[entity.type])
 
-    entity_time = time.time()
-    #print("Replace nouns: {}".format(result))
 
-    if light_module:
-        values, indices, dense_shape = process_to_IDs_in_sparse_format(sp, result)
-        #embedding_init_time = time.time()
-        test_message_embeddings = session.run(
-                encodings,
-                feed_dict={input_placeholder.values: values,
-                    input_placeholder.indices: indices,
-                    input_placeholder.dense_shape: dense_shape})
+
+
+    print("\n\ninput : {}".format(Input_data))
+    print("Replace nouns: {}\n\n".format(result))
+
+    time1 = time.time()
+    # module_url = "https://tfhub.dev/google/universal-sentence-encoder/1"  # @param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
+    # print("start embed")
+    # # Import the Universal Sentence Encoder's TF Hub module
+    # embed = hub.Module(module_url)
+    #
+    # Reduce logging output.
+    tf.logging.set_verbosity(tf.logging.ERROR)
+
+
+    if not os.path.exists("./profile2.bin"):
+        print("There is no profile2.bin. Making profile2.bin")
+        for message in message_total:
+            message_embeddings = session.run(embed(message))
+            message_embeddings_total.append(message_embeddings)
+        with open('profile2.bin', 'wb') as f:
+            pickle.dump(message_embeddings_total, f)
+        print("Finish make profile!")
     else:
-        #embedding_init_time = time.time()
-        print("result %s" % result)
-        test_message_embeddings = session.run(embedding, feed_dict={messages: [result]})
-        #test_message_embeddings = session.run(embedding, feed_dict={messages: [result]})
-        #embedding = embed([result])
-        #test_message_embeddings = session.run(embedding)
+        print("profile2.bin exists")
+        with open('./profile2.bin', 'rb') as f:
+            message_embeddings_total = pickle.load(f)
 
-    embedding_time = time.time()
+    print("\n\ncompare with : "+ str(len(message_total[0]))+", "+str(len(message_total[1]))+", "+str(len(message_total[2])))
+    print("compare with : "+ str(len(message_embeddings_total[0]))+", "+str(len(message_embeddings_total[1]))+", "+str(len(message_embeddings_total[2])))
 
-    test_labels = [1]
+
+    time2 = time.time()
+    test_message_embeddings = session.run(embedding, feed_dict={messages: [result]})
+    time3 = time.time()
 
     minimum = 100
     minimum_index = 0
-    for i, message_embedding in enumerate(message_embeddings):
+    entity_num = len(entities)
+    if entity_num==0:
+        entity_num=1
+    # for i, message_embedding in enumerate(message_embeddings):
+    #     error = rmse(np.array(message_embedding), np.array(test_message_embeddings))
+    #     if minimum > error:
+    #       minimum = error
+    #       minimum_index = i
+
+    for i, message_embedding in enumerate(message_embeddings_total[entity_num-1]):
         error = rmse(np.array(message_embedding), np.array(test_message_embeddings))
         if minimum > error:
-            minimum = error
-            minimum_index = i
+          minimum = error
+          minimum_index = i
 
-    # print("Minimum RMSE value: {}".format(minimum))
-    # print("Estimation: {}".format(minimum_index))
-    # print("Most similar script: {}".format(scripts[minimum_index]))
+
+    print("\n\n\n\n\n")
+
+
+    print("Minimum RMSE value: {}".format(minimum))
+    print("Most similar script: {}".format(script_total[entity_num-1][minimum_index]))
+    print("Estimation: {}".format(minimum_index))
     #print("Answer: {}\n".format(test_label))
-    result2 = scripts[minimum_index] #query
-
+    result2 = script_total[entity_num-1][minimum_index] #query
 
     Dict_entitis={}
     K=[] #Keys = Type
@@ -226,61 +733,59 @@ for test_enum, x_text in enumerate(input_data):
     for entity in entities:
         # Dict_entitis[entity.name]=entity_type[entity.type]
         google.append(google_entity_type[entity.type])
-        #K.append(entity_type[entity.type])
-        K.append(next(entity_type2[entity.type]))
+        K.append(entity_type[entity.type])
         V.append(entity.name)
 
 
     # print("Dict_entitis : ", Dict_entitis)
-    # print("Entities : ", google)
+    print("Entities : ", google)
     print("Keys : ", K)
     print("Values : ", V)
+    print("entity_number : ", entity_num)
 
     # for key, value in Dict_entitis.items():
     #     result2 = result2.replace(value, key)
 
     number = len(K)
     for i in range(0, number):
-        result2 = result2.replace(K[i], V[i], 1)
-    if 'TIME1' in result2:
-        result2 = result2.replace('TIME1', line_time)
+        result2 = result2.replace(K[i], V[i],1)
 
-    end_time = time.time()
+    if line_time is not '':
+        result2 = result2.replace('Time', line_time,1)
 
-    print("input: {}".format(x_text))
+    print("input: {}".format(Input_data[0]))
+    print("Replace nouns: {}".format(result))
+    print("Selected Sentence: {}".format(message_total[entity_num-1][minimum_index]))
     print("Query: {}".format(result2))
-    print("setting_time={}".format(setting_time-start_time))
-    print("entity_time={}".format(entity_time-setting_time))
-    #print("make_bin_time={}".format(make_bin_time-entity_time))
-    #print("embedding_init_time={}".format(embedding_init_time-entity_time))
-    print("embedding_time={}".format(embedding_time-entity_time))
-    print("rmse_time={}".format(end_time-embedding_time))
-    print("total_time={}".format(end_time-start_time))
-    
-    if len(input_data) > 1:
-        label_script[test_enum] = label_script[test_enum].upper()
-        label_script[test_enum] = label_script[test_enum].replace(" ", "")
-        result2 = result2.upper()
-        result2 = result2.replace(" ", "")
-        #if int(y[test_enum]) == int(minimum_index):
-        #print("y_estimate:{}, y:{}".format(minimum_index, y[test_enum]))
-        print("y_estimate:{}, label_script:{}".format(result2, label_script[test_enum]))
-        if label_script[test_enum] == result2:
-            correct = 'O'
-            answer_correct = answer_correct + 1
-            print('answer_correct')
+
+    if embeded_class_id[entity_num-1][minimum_index] != Input_data[2]:
+        Wrong_sentence = Wrong_sentence + [Input_data[0]]
+        Wrong_script = Wrong_sentence + [Input_data[1]]
+        Wrong_classID=Wrong_classID+[embeded_class_id[entity_num-1][minimum_index]]
+        Wrong_answer = Wrong_answer + [Input_data[2]]
+        if result2.upper() != Input_data[1].upper():
+            Wrong_navscript=Wrong_navscript+["X"]
         else:
-            correct = 'X'
+            Wrong_navscript = Wrong_navscript + ["O"]
+    else:
+        Correct_sentence = Correct_sentence + [Input_data[0]]
+        Correct_script = Correct_script + [Input_data[1]]
+        Correct_classID = Correct_classID + [embeded_class_id[entity_num - 1][minimum_index]]
+        Correct_answer = Correct_answer + [Input_data[2]]
+        if result2.upper() != Input_data[1].upper():
+            Correct_navscript=Correct_navscript+["X"]
+        else:
+            Correct_navscript = Correct_navscript + ["O"]
+    time4 = time.time()
 
-    print("{}/{}".format(answer_correct, test_enum + 1))
-    print("////////////////////////")
+    print('time0 = {}'.format(time1 - time0))
+    print('time1 = {}'.format(time2 - time1))
+    print('time2 = {}'.format(time3 - time2))
+    print('time3 = {}'.format(time4 - time3))
+    print('total time = {}'.format(time4 - time0))
 
-    #('enum, input, answer, estimate, correct')
-    result_sheet_file = open('./result_sheet.txt', 'a')
-    result_sheet_file.write("{}||{}||{}||{}||{}\n".format(test_enum, x_text, label_script[test_enum], result2, correct))
-    result_sheet_file.close()
-    start_time = time.time()
-
-if len(input_data) > 1:
-    print("Result: {}/{}".format(answer_correct, len(input_data)))
-result_sheet_file.close()
+w=open("Result.txt",'w')
+for enum, X in enumerate(zip(Correct_answer,Correct_classID, Correct_script, Correct_navscript)):
+    w.write(str(X[0])+"||"+str(X[1])+"||"+str(X[2])+"||"+"O"+"||"+str(X[3]))
+for enum, X in enumerate(zip(Wrong_answer,Wrong_classID, Wrong_script, Wrong_navscript)):
+    w.write(str(X[0])+"||"+str(X[1])+"||"+str(X[2])+"||"+"X"+"||"+str(X[3]))
