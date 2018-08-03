@@ -33,20 +33,12 @@ def find_and_change_entity(input_sentence):
         replace_save_dict.update({entity.name:entity_type[entity.type]+str(entity_counter[entity.type])})
         entity_counter[entity.type] += 1
 
-    print("Input: {}".format(input_sentence))
-    print("Find entities: {}".format(entities))
-    print("Replace dictionary: {}".format(replace_save_dict))
-    print("Replaced sentence: {}\n".format(replaced_sentence))
-
     return replaced_sentence, replace_save_dict
 
 def replace_to_script(input_script, replace_save_dict):
     for replace_element in replace_save_dict:
         input_script = input_script.replace(replace_save_dict[replace_element], replace_element)
     replaced_script = input_script
-    print("Input_script: {}".format(input_script))
-    print("Input_save_dict: {}".format(replace_save_dict))
-    print("Replaced script: {}".format(replaced_script))
     return replaced_script
 
 def main():
