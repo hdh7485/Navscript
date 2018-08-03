@@ -214,26 +214,6 @@ two = [
     "Find the cheapest indoor SCHOOL within 500 meters of my SOMETHING.",
     "Find the cheapest indoor SCHOOL within 500 meters of my SCHOOL.",
 
-    # "What's WASHINGTON like on the WASHINGTON?",
-    # "What's WASHINGTON like on the SOMETHING?",
-    # "What's WASHINGTON like on the SCHOOL?",
-    # "What's WASHINGTON like on the MONALISA?",
-    #
-    # "What's SOMETHING like on the WASHINGTON?",
-    # "What's SOMETHING like on the SOMETHING?",
-    # "What's SOMETHING like on the SCHOOL?",
-    # "What's SOMETHING like on the MONALISA?",
-    #
-    # "What's SCHOOL like on the WASHINGTON?",
-    # "What's SCHOOL like on the SOMETHING?",
-    # "What's SCHOOL like on the SCHOOL?",
-    # "What's SCHOOL like on the MONALISA?",
-    #
-    # "What's MONALISA like on the WASHINGTON?",
-    # "What's MONALISA like on the SOMETHING?",
-    # "What's MONALISA like on the SCHOOL?",
-    # "What's MONALISA like on the MONALISA?",
-
     "Are there any WASHINGTON on my WASHINGTON?",
     "Are there any WASHINGTON on my SOMETHING?",
     "Are there any WASHINGTON on my SCHOOL?",
@@ -300,26 +280,6 @@ two_script = [
     "[SEARCH ONE FROM:SCHOOL WHERE:WASHINGTON RANGE:500M WITH:[SORT PRICE ASC]]",
     "[SEARCH ONE FROM:SCHOOL WHERE:SOMETHING RANGE:500M WITH:[SORT PRICE ASC]]",
     "[SEARCH ONE FROM:SCHOOL WHERE:SCHOOL RANGE:500M WITH:[SORT PRICE ASC]]",
-
-    # "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:WASHINGTON WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    #
-    # "[MODE TRAFFIC [SEARCH FROM:SOMETHING WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:SOMETHING WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:SOMETHING WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:SOMETHING WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    #
-    # "[MODE TRAFFIC [SEARCH FROM:SCHOOL WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:SCHOOL WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:SCHOOL WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:SCHOOL WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    #
-    # "[MODE TRAFFIC [SEARCH FROM:MONALISA WHERE:[SEARCH KEYWORD:WASHINGTON]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:MONALISA WHERE:[SEARCH KEYWORD:SOMETHING]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:MONALISA WHERE:[SEARCH KEYWORD:SCHOOL]] WITH:[VOICERESPONSE TEMPLATE:””*]",
-    # "[MODE TRAFFIC [SEARCH FROM:MONALISA WHERE:[SEARCH KEYWORD:MONALISA]] WITH:[VOICERESPONSE TEMPLATE:””*]",
 
     "[MODE WASHINGTON WHERE:WASHINGTON WITH:[VOICERESPONSE TEMPLATE:””*]]",
     "[MODE WASHINGTON WHERE:SOMETHING WITH:[VOICERESPONSE TEMPLATE:””*]]",
@@ -585,6 +545,7 @@ three_script = [
     "[SEARCH ONE FROM:NOTEBOOK WITH:SCHOOL WITH:SOMETHING]",
     "[SEARCH ONE FROM:NOTEBOOK WITH:SCHOOL WITH:SCHOOL]"
 ]
+
 three_class_id=[
     2, 2, 2, 2, 2, 2, 2, 2, 2,
     2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -630,7 +591,7 @@ Wrong_answer=[]
 Wrong_ID=[]
 Wrong_navscript=[]
 
-module_url = "https://tfhub.dev/google/universal-sentence-encoder/1"  # @param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
+module_url = "https://tfhub.dev/google/universal-sentence-encoder/1" 
 embed = hub.Module(module_url)
 messages = tf.placeholder(dtype=tf.string, shape=[None])
 embedding = embed(messages)
@@ -638,9 +599,7 @@ embedding = embed(messages)
 session = tf.Session()
 session.run([tf.global_variables_initializer(), tf.tables_initializer()])
 t_sentences, t_scripts, class_ID = load_data(Data_path)
-print("start embed")
-# Import the Universal Sentence Encoder's TF Hub module
-print("end")
+
 for test_enum, Input_data in enumerate(zip(t_sentences,t_scripts,class_ID)):
     time0 = time.time()
     lines=Input_data[0]
@@ -654,7 +613,7 @@ for test_enum, Input_data in enumerate(zip(t_sentences,t_scripts,class_ID)):
         content=lines,
         language='en',
         type=enums.Document.Type.PLAIN_TEXT)
-    # document = types.Document(content=lines,language='en',type=enums.Document.Type.PLAIN_TEXT)
+
     entities = client.analyze_entities(document).entities
 
     result = Input_data[0]
@@ -662,21 +621,12 @@ for test_enum, Input_data in enumerate(zip(t_sentences,t_scripts,class_ID)):
     for entity in entities:
         result = result.replace(entity.name, entity_type[entity.type])
 
-
-
-
     print("\n\ninput : {}".format(Input_data))
     print("Replace nouns: {}\n\n".format(result))
 
     time1 = time.time()
-    # module_url = "https://tfhub.dev/google/universal-sentence-encoder/1"  # @param ["https://tfhub.dev/google/universal-sentence-encoder/1", "https://tfhub.dev/google/universal-sentence-encoder-large/1"]
-    # print("start embed")
-    # # Import the Universal Sentence Encoder's TF Hub module
-    # embed = hub.Module(module_url)
-    #
-    # Reduce logging output.
+    
     tf.logging.set_verbosity(tf.logging.ERROR)
-
 
     if not os.path.exists("./profile2.bin"):
         print("There is no profile2.bin. Making profile2.bin")
