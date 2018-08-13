@@ -9,8 +9,9 @@ def main():
     sentence = 'Where is a burgerking along the route.'
     #nouns = ['burgerking', 'route']
     nouns = ['route', 'burgerking', 'along', 'Where']
-    print(sentence)
-    print(check_order(sentence, nouns))
+    print('input:{}'.format(sentence))
+    print('input:{}'.format(nouns))
+    print('output:{}'.format(check_order(sentence, nouns)))
 
 if __name__ == '__main__':
     main()
