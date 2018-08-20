@@ -25,6 +25,7 @@ def find_and_change_entity(input_sentence):
         type=enums.Document.Type.PLAIN_TEXT)
 
     entities = client.analyze_entities(document).entities
+    print(entities)
 
     replace_save_dict = {}
 
