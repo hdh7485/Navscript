@@ -103,4 +103,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+<<<<<<< HEAD
 *~
+=======
+modules/
+*.swp
+>>>>>>> d1e12984a25735f75e65aef645f44d4eeff5b3c2
